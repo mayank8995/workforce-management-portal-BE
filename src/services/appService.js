@@ -1,26 +1,9 @@
 const db = require('../config/db');
-const { z } = require('zod');
 const { getList, fetchFiltersList } = require('./utilService');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 /** used this in node terminal  - require('crypto').randomBytes(64).toString('hex') for generating access and refresh token */
-const PaginationSchema = z
-  .object({
-    page: z.coerce
-      .number()
-      .int()
-      .positive('Page must be a positive integer')
-      .default(1),
-
-    limit: z.coerce
-      .number()
-      .int()
-      .positive()
-      .max(100, 'Max items per page is 100')
-      .default(10),
-  })
-  .catchall(z.string());
 
 const paginatedEmployeeList = (req) => {
   let response;
@@ -33,11 +16,9 @@ const paginatedEmployeeList = (req) => {
     success: true,
     ...response,
   };
-  //Math.ceil(employeeList[0].totalEmployeeCount / limit)
 };
 const fetchFilters = (req) => {
   const response = fetchFiltersList(req);
-  // console.log('response>>>', response);
   return {
     success: true,
     ...response,
@@ -70,7 +51,7 @@ const login = async ({ email, password }) => {
       email: user.email,
     },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: '30m' }
+    { expiresIn: '1h' }
   );
   const refreshToken = jwt.sign(
     {

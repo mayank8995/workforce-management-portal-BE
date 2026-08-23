@@ -1,6 +1,6 @@
 const service = require('../services/appService');
 const db = require('../config/db');
-
+const employeeForm = require('../config/employeeFormConfig');
 const getEmployees = (req, res) => {
   try {
     const response = service.fetchEmployeeList();
@@ -163,6 +163,12 @@ const checkServerHealth = (req, res) => {
   res.status(200).json({ status: 'ok' });
 };
 
+const fetchEmployeeFormConfig = (req, res) => {
+  try {
+    res.status(200).json(employeeForm);
+  } catch (error) {}
+};
+
 module.exports = {
   getEmployees,
   getPaginatedEmployees,
@@ -178,4 +184,5 @@ module.exports = {
   refreshToken,
   logout,
   checkServerHealth,
+  fetchEmployeeFormConfig,
 };

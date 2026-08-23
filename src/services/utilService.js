@@ -63,7 +63,6 @@ const getList = function (req) {
       totalItems = result.length;
       totalPages = Math.ceil(totalItems / limit);
       result = paginateList(result, page, limit);
-      // console.log(" result>>>",result)
       response = {
         employees: result,
         attritionInsights: employeeList[0].attritionInsights,
@@ -80,7 +79,6 @@ const getList = function (req) {
       };
       break;
     case 'topProjects':
-      // console.log('in topPorject tableType>>>>', tableType, req.query);
       result = sortList(
         searchList(
           filterList(getTopProjects(employeeList[0].employees), map, true),
@@ -93,7 +91,6 @@ const getList = function (req) {
       totalPages = Math.ceil(totalItems / limit);
       result = paginateList(result, page, limit);
 
-      // result = paginateList(result, page, limit);
       response = {
         employees: result,
         pagination: {
@@ -115,14 +112,11 @@ const getList = function (req) {
       };
       break;
   }
-  // } catch (error) {
-  //   throw error;
-  // }
+
   return response;
 };
 
 const filterList = function (list, queryList, isTopProjects) {
-  // console.log('queryList>>>', queryList);
   const filteredArray = [];
   let flag = 1;
   if (queryList.size === 0) return list;
@@ -134,7 +128,6 @@ const filterList = function (list, queryList, isTopProjects) {
         let path = searchfilterableFields.get(key).split('$');
         path = isTopProjects ? [path[path.length - 1]] : path;
         const values = extract(item, path);
-        // console.log('values>>>', values, '  path>>>', path);
         if (Array.isArray(values)) {
           const match = value.filter((it) => values.includes(it));
           if (match.length === 0) {
@@ -149,7 +142,6 @@ const filterList = function (list, queryList, isTopProjects) {
         }
       }
     }
-    // console.log('filteredArray>>>', filteredArray);
     flag && filteredArray.push(item);
   }
   return filteredArray;
@@ -158,7 +150,6 @@ const filterList = function (list, queryList, isTopProjects) {
 const searchList = function (list, searchKey) {
   const result = [];
   const cleanQuery = searchKey.trim().replace(/\s+/g, ' ').toLowerCase();
-  // console.log('cleanQuery>>>', cleanQuery);
   if (!cleanQuery) return list;
   for (const item of list) {
     if (search(item, cleanQuery)) result.push(item);
@@ -176,7 +167,6 @@ const search = function (item, cleanQuery) {
 };
 
 const sortList = function (list, sortBy, order) {
-  // console.log(list, sortBy, order);
   if (!list.length) return list;
   list.sort((a, b) => {
     if (a[sortBy] < b[sortBy]) return order === 'asc' ? -1 : 1;
@@ -364,7 +354,6 @@ const fetchFiltersList = function (req) {
     const fieldName = path[path.length - 1];
 
     const values = extract(data, path);
-    // console.log('values>>>', values);
     valuesMap.set(fieldName, [...new Set(values)]);
   }
   const response = {
@@ -397,6 +386,10 @@ const getTopProjects = function (data) {
   }
   return topProjectsArray;
 };
+
+// EmployeeFormSchema Transformer
+
+const transformSchema = function () {};
 
 module.exports = {
   getList,
