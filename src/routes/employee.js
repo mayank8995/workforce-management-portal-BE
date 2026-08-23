@@ -23,5 +23,10 @@ employeeRouter.get(
 
   controller.fetchEmployeeFormConfig
 );
+employeeRouter.post(
+  '/seed/employees',
+
+  controller.seedEmployees
+);
 
 module.exports = employeeRouter;

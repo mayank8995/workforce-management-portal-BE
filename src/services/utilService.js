@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const db = require('../config/database');
 const { z } = require('zod');
 const {
   filterableFields,
@@ -386,10 +386,6 @@ const getTopProjects = function (data) {
   }
   return topProjectsArray;
 };
-
-// EmployeeFormSchema Transformer
-
-const transformSchema = function () {};
 
 module.exports = {
   getList,

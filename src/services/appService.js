@@ -1,7 +1,8 @@
-const db = require('../config/db');
+const db = require('../config/database');
 const { getList, fetchFiltersList } = require('./utilService');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const User = require('../model/user');
+const Employee = require('../model/employee');
 require('dotenv').config();
 /** used this in node terminal  - require('crypto').randomBytes(64).toString('hex') for generating access and refresh token */
 
@@ -35,39 +36,28 @@ const fetchProfile = ({ id }) => {
   return foundProfile;
 };
 
-const login = async ({ email, password }) => {
-  // evaluate password
-  const user = db.get('users').find({ email }).value();
+const login = async (req, res) => {
+  // extract
+  const { email, password } = req.body;
+  // check if user is already registered.
+  const user = await User.findOne({ email: email });
   if (!user) {
-    throw new Error('Invalid Credentials');
+    throw new Error('Invalid credentials');
   }
-  const match = await bcrypt.compare(password, user.password);
-
-  if (!match) {
-    throw new Error('Invalid Credentials');
+  const isPasswordValid = await user.validatePassword(password);
+  if (isPasswordValid) {
+    const { token } = await user.getJWT();
+    res.cookie('token', token, {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: true,
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+  } else {
+    throw new Error('Invalid credentials');
   }
-  const accessToken = jwt.sign(
-    {
-      email: user.email,
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: '1h' }
-  );
-  const refreshToken = jwt.sign(
-    {
-      email: user.email,
-    },
-    process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: '1d' }
-  );
-  const currentUser = { ...user, refreshToken };
-  await db.get('users').find({ email: user.email }).assign(currentUser).write();
-
   return {
-    accessToken,
-    refreshToken,
-    user: { id: user.id, name: user.name },
-    message: 'Logged in successfully',
+    user,
   };
 };
 
@@ -136,29 +126,108 @@ const signup = async ({
   department,
   empId,
 }) => {
-  const duplicate = db.get('users').find({ email }).value();
-  if (duplicate) {
-    throw new Error('Email already registered');
+  // check if user is already registered.
+  const isUserRegistered = await User.findOne({ email: email });
+  if (isUserRegistered) {
+    throw new Error('User already registerd');
   }
-
   //encrypt the password
   const hashedPwd = await bcrypt.hash(password, 10);
-
-  //store the new user
-  const newUser = {
-    id: Date.now().toString(),
+  // creating new user instance
+  const user = new User({
     name,
     email,
     password: hashedPwd,
     designation,
     department,
     empId,
-  };
-  db.get('users').push(newUser).write();
+  });
+  await user.save();
   return {
-    token: `fake-jwt-${newUser.id}-${Date.now()}`,
-    user: { id: newUser.id, name: newUser.name },
-    message: 'Sign up successful',
+    user,
+  };
+};
+
+const signupbulk = async () => {
+  const employeeData = require('../../dummy.json');
+  const employees = employeeData.employeeList[0].employees;
+
+  const excludedIds = new Set([110, 111, 112, 113, 114, 123]);
+
+  // Get IDs already present in DB
+  const existingEmpIds = new Set(await User.distinct('empId'));
+
+  let nextEmpId = 100;
+
+  const successfulUsers = [];
+  const failedUsers = [];
+
+  for (const employee of employees) {
+    try {
+      // Find the next unused employee ID
+      let empId;
+
+      while (nextEmpId <= 310) {
+        const candidate = `B/${nextEmpId}`;
+
+        if (!excludedIds.has(nextEmpId) && !existingEmpIds.has(candidate)) {
+          empId = candidate;
+          break;
+        }
+
+        nextEmpId++;
+      }
+
+      if (!empId) {
+        throw new Error('No employee ID available between B/100 and B/300');
+      }
+
+      const nameParts = employee.name.trim().split(/\s+/);
+
+      const firstName = nameParts[0].toLowerCase();
+      const lastName = nameParts[nameParts.length - 1].toLowerCase();
+
+      const email = `${firstName}.${lastName}@ad.com`;
+      const plainPassword = `${firstName}.${lastName}@Theory123`;
+
+      const hashedPassword = await bcrypt.hash(plainPassword, 12);
+
+      const user = await User.create({
+        name: employee.name,
+        email,
+        password: hashedPassword,
+        designation: employee.designation,
+        department: employee.department,
+        empId,
+      });
+
+      // Mark this ID as used
+      existingEmpIds.add(empId);
+      nextEmpId++;
+
+      successfulUsers.push({
+        name: user.name,
+        email: user.email,
+        empId: user.empId,
+      });
+    } catch (error) {
+      // This employee fails, but the loop continues
+      failedUsers.push({
+        name: employee.name,
+        employeeId: employee.id,
+        reason: error.message,
+      });
+    }
+  }
+
+  return {
+    success: true,
+    message: 'Bulk signup processing completed',
+    totalEmployees: employees.length,
+    successful: successfulUsers.length,
+    failed: failedUsers.length,
+    successfulUsers,
+    failedUsers,
   };
 };
 
@@ -169,6 +238,23 @@ const fetchEmployeeDetails = (req) => {
     .value()
     .employeeList[0].employees.find((emp) => emp.id === Number(id));
   return employee;
+};
+
+const seedEmployees = async () => {
+  try {
+    const employeeData = require('../../dummy.json');
+    const employees = employeeData.employeeList[0].employees;
+    await Employee.deleteMany({});
+
+    const createdUsers = await Employee.insertMany(employees);
+
+    return {
+      message: 'Employees seeded successfully',
+      count: createdUsers.length,
+    };
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
 module.exports = {
@@ -184,4 +270,6 @@ module.exports = {
   fetchFilters,
   fetchEmployeeDetails,
   logout,
+  signupbulk,
+  seedEmployees,
 };
