@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
-
+require('dotenv').config();
+const MONGO_URL = process.env.MONGO_URL;
 const connectDB = async () => {
-  await mongoose.connect(
-    'mongodb+srv://loadinglazy108_db_user:______________@admin-portal-node0.iqomevi.mongodb.net/adminPortal'
-  );
+  await mongoose.connect(`${MONGO_URL}`);
 };
 
 module.exports = connectDB;
