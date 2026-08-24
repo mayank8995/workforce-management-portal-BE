@@ -1,0 +1,224 @@
+const mongoose = require('mongoose');
+const validator = require('validator');
+const {
+  PROJECT_STATUS,
+  DEPARTMENTS,
+  RISK_STATUS,
+  WORKMODE,
+  EMPLOYEE_SATISFACTION,
+} = require('../utils/constants');
+const projectSchema = new mongoose.Schema({
+  projectName: {
+    type: String,
+    required: true,
+    trim: true,
+    minLength: 2,
+    maxLength: 100,
+    validate(value) {
+      if (!validator.isLength(value, { min: 2, max: 100 })) {
+        throw new Error('Project name must be between 2 and 100 characters');
+      }
+    },
+  },
+
+  status: {
+    type: String,
+    required: true,
+    enum: {
+      values: PROJECT_STATUS,
+      message: `{VALUE} is invalid`,
+    },
+  },
+
+  riskStatus: {
+    type: String,
+    required: true,
+    enum: {
+      values: RISK_STATUS,
+      message: `{VALUE} is invalid`,
+    },
+  },
+
+  priorityRanking: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 10,
+    validate(value) {
+      if (!Number.isInteger(value)) {
+        throw new Error('Priority ranking must be an integer');
+      }
+    },
+  },
+});
+
+const employeeSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      minLength: 3,
+      maxLength: 35,
+      trim: true,
+      validate(value) {
+        // Allows letters, spaces, apostrophes and hyphens
+        if (!validator.isAlpha(value, 'en-US', { ignore: " '-" })) {
+          throw new Error(
+            'Name can contain only letters, spaces, apostrophes and hyphens'
+          );
+        }
+      },
+    },
+
+    email: {
+      type: String,
+      required: true,
+      // if unique is set, then mongo automatically creates index for the field
+      unique: true,
+      lowercase: true,
+      trim: true,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error('Please provide a valid email address');
+        }
+      },
+    },
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+      validate(value) {
+        // Check across any supported country locale
+        if (
+          !validator.isMobilePhone(value, 'any') &&
+          !/^\+\d{1,3}-\d{3}-\d{6,10}$/.test(value)
+        ) {
+          throw new Error('Invalid phone number format');
+        }
+      },
+    },
+
+    department: {
+      type: String,
+      required: true,
+      trim: true,
+      enum: {
+        values: DEPARTMENTS,
+        message: `{VALUE} is invalid department type`,
+      },
+    },
+
+    designation: {
+      type: String,
+      required: true,
+      trim: true,
+      minLength: 2,
+      maxLength: 35,
+    },
+
+    manager: {
+      type: String,
+      required: true,
+      trim: true,
+      minLength: 3,
+      maxLength: 35,
+    },
+
+    joiningDate: {
+      type: Date,
+      required: true,
+      validate(value) {
+        if (value > new Date()) {
+          throw new Error('Joining date cannot be in the future');
+        }
+      },
+    },
+
+    yearsOfExperience: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 60,
+      validate(value) {
+        if (typeof value !== 'number') {
+          throw new Error('Years of experience must be a number');
+        }
+      },
+    },
+
+    salary: {
+      type: Number,
+      required: true,
+      min: 0,
+      validate(value) {
+        if (!Number.isFinite(value)) {
+          throw new Error('Salary must be a valid number');
+        }
+      },
+    },
+
+    location: {
+      type: String,
+      required: true,
+      trim: true,
+      maxLength: 100,
+    },
+
+    workMode: {
+      type: String,
+      required: true,
+      enum: {
+        values: WORKMODE,
+        message: `{VALUE} is invalid work mode`,
+      },
+    },
+
+    projects: {
+      type: [projectSchema],
+      default: [],
+    },
+
+    skills: {
+      type: [
+        {
+          type: String,
+          trim: true,
+          minLength: 1,
+          maxLength: 50,
+        },
+      ],
+      default: [],
+    },
+
+    rating: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 5,
+    },
+
+    attendancePercentage: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 100,
+    },
+
+    employeeSatisfaction: {
+      type: String,
+      required: true,
+      enum: EMPLOYEE_SATISFACTION,
+    },
+
+    onNoticePeriod: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.model('Employee', employeeSchema);
