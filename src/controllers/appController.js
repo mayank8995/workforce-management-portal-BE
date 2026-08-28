@@ -149,18 +149,6 @@ const signup = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-const signupbulk = async (req, res) => {
-  try {
-    const response = await service.signupbulk();
-    res.status(207).json({
-      success: true,
-      message: 'User added successfully',
-      data: response,
-    });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
 
 const getEmployeeDetails = (req, res) => {
   try {
@@ -206,6 +194,5 @@ module.exports = {
   logout,
   checkServerHealth,
   fetchEmployeeFormConfig,
-  signupbulk,
   seedEmployees,
 };

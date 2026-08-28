@@ -69,7 +69,6 @@ const employeeSchema = new mongoose.Schema(
         }
       },
     },
-
     email: {
       type: String,
       required: true,
@@ -82,6 +81,12 @@ const employeeSchema = new mongoose.Schema(
           throw new Error('Please provide a valid email address');
         }
       },
+    },
+    empId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
     },
     phone: {
       type: String,

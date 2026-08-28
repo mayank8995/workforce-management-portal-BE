@@ -4,6 +4,7 @@ const { DEPARTMENTS } = require('../utils/constants');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -106,4 +107,5 @@ userSchema.methods.validatePassword = async function (passwordInputByUser) {
   );
   return isPasswordValid;
 };
+
 module.exports = mongoose.model('User', userSchema);

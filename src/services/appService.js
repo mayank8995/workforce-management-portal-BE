@@ -4,7 +4,6 @@ const bcrypt = require('bcrypt');
 const User = require('../model/user');
 const Employee = require('../model/employee');
 require('dotenv').config();
-/** used this in node terminal  - require('crypto').randomBytes(64).toString('hex') for generating access and refresh token */
 
 const paginatedEmployeeList = (req) => {
   let response;
@@ -148,89 +147,6 @@ const signup = async ({
   };
 };
 
-const signupbulk = async () => {
-  const employeeData = require('../../dummy.json');
-  const employees = employeeData.employeeList[0].employees;
-
-  const excludedIds = new Set([110, 111, 112, 113, 114, 123]);
-
-  // Get IDs already present in DB
-  const existingEmpIds = new Set(await User.distinct('empId'));
-
-  let nextEmpId = 100;
-
-  const successfulUsers = [];
-  const failedUsers = [];
-
-  for (const employee of employees) {
-    try {
-      // Find the next unused employee ID
-      let empId;
-
-      while (nextEmpId <= 310) {
-        const candidate = `B/${nextEmpId}`;
-
-        if (!excludedIds.has(nextEmpId) && !existingEmpIds.has(candidate)) {
-          empId = candidate;
-          break;
-        }
-
-        nextEmpId++;
-      }
-
-      if (!empId) {
-        throw new Error('No employee ID available between B/100 and B/300');
-      }
-
-      const nameParts = employee.name.trim().split(/\s+/);
-
-      const firstName = nameParts[0].toLowerCase();
-      const lastName = nameParts[nameParts.length - 1].toLowerCase();
-
-      const email = `${firstName}.${lastName}@ad.com`;
-      const plainPassword = `${firstName}.${lastName}@Theory123`;
-
-      const hashedPassword = await bcrypt.hash(plainPassword, 12);
-
-      const user = await User.create({
-        name: employee.name,
-        email,
-        password: hashedPassword,
-        designation: employee.designation,
-        department: employee.department,
-        empId,
-      });
-
-      // Mark this ID as used
-      existingEmpIds.add(empId);
-      nextEmpId++;
-
-      successfulUsers.push({
-        name: user.name,
-        email: user.email,
-        empId: user.empId,
-      });
-    } catch (error) {
-      // This employee fails, but the loop continues
-      failedUsers.push({
-        name: employee.name,
-        employeeId: employee.id,
-        reason: error.message,
-      });
-    }
-  }
-
-  return {
-    success: true,
-    message: 'Bulk signup processing completed',
-    totalEmployees: employees.length,
-    successful: successfulUsers.length,
-    failed: failedUsers.length,
-    successfulUsers,
-    failedUsers,
-  };
-};
-
 const fetchEmployeeDetails = (req) => {
   const { id } = req.query;
   const employee = db
@@ -270,6 +186,5 @@ module.exports = {
   fetchFilters,
   fetchEmployeeDetails,
   logout,
-  signupbulk,
   seedEmployees,
 };

@@ -1,32 +1,36 @@
 const employeeRouter = require('express').Router();
-const controller = require('../controllers/appController');
+const appController = require('../controllers/appController');
+const analyticsController = require('../controllers/analyticsController');
 const { verifyJWT } = require('../middleware/verifyJWT');
 employeeRouter.get(
   '/paginatedEmployeeList',
   verifyJWT,
-  controller.getPaginatedEmployees
+  appController.getPaginatedEmployees
 );
-employeeRouter.get('/analytics', verifyJWT, controller.getAnalytics);
+employeeRouter.get('/analytics', verifyJWT, appController.getAnalytics);
 employeeRouter.get(
   '/performanceCards',
   verifyJWT,
-  controller.getPerformanceCards
+  appController.getPerformanceCards
 );
 employeeRouter.get(
   '/getEmployeeDetails',
   verifyJWT,
-  controller.getEmployeeDetails
+  appController.getEmployeeDetails
 );
-employeeRouter.get('/getFilterList', verifyJWT, controller.getFilters);
+employeeRouter.get('/getFilterList', verifyJWT, appController.getFilters);
 employeeRouter.get(
   '/getEmployeeFormConfig',
 
-  controller.fetchEmployeeFormConfig
+  appController.fetchEmployeeFormConfig
+);
+employeeRouter.get(
+  '/employee/analytics/:type',
+  analyticsController.fetchEmployeeAnalytics
 );
 employeeRouter.post(
-  '/seed/employees',
-
-  controller.seedEmployees
+  '/employee/analytics/populate/:type',
+  analyticsController.populateEmployeeAnalytics
 );
 
 module.exports = employeeRouter;
