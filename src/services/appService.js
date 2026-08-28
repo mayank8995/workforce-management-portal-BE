@@ -1,26 +1,9 @@
-const db = require('../config/db');
-const { z } = require('zod');
+const db = require('../config/database');
 const { getList, fetchFiltersList } = require('./utilService');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const User = require('../model/user');
+const Employee = require('../model/employee');
 require('dotenv').config();
-/** used this in node terminal  - require('crypto').randomBytes(64).toString('hex') for generating access and refresh token */
-const PaginationSchema = z
-  .object({
-    page: z.coerce
-      .number()
-      .int()
-      .positive('Page must be a positive integer')
-      .default(1),
-
-    limit: z.coerce
-      .number()
-      .int()
-      .positive()
-      .max(100, 'Max items per page is 100')
-      .default(10),
-  })
-  .catchall(z.string());
 
 const paginatedEmployeeList = (req) => {
   let response;
@@ -33,11 +16,9 @@ const paginatedEmployeeList = (req) => {
     success: true,
     ...response,
   };
-  //Math.ceil(employeeList[0].totalEmployeeCount / limit)
 };
 const fetchFilters = (req) => {
   const response = fetchFiltersList(req);
-  // console.log('response>>>', response);
   return {
     success: true,
     ...response,
@@ -54,39 +35,28 @@ const fetchProfile = ({ id }) => {
   return foundProfile;
 };
 
-const login = async ({ email, password }) => {
-  // evaluate password
-  const user = db.get('users').find({ email }).value();
+const login = async (req, res) => {
+  // extract
+  const { email, password } = req.body;
+  // check if user is already registered.
+  const user = await User.findOne({ email: email });
   if (!user) {
-    throw new Error('Invalid Credentials');
+    throw new Error('Invalid credentials');
   }
-  const match = await bcrypt.compare(password, user.password);
-
-  if (!match) {
-    throw new Error('Invalid Credentials');
+  const isPasswordValid = await user.validatePassword(password);
+  if (isPasswordValid) {
+    const { token } = await user.getJWT();
+    res.cookie('token', token, {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: true,
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+  } else {
+    throw new Error('Invalid credentials');
   }
-  const accessToken = jwt.sign(
-    {
-      email: user.email,
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: '30m' }
-  );
-  const refreshToken = jwt.sign(
-    {
-      email: user.email,
-    },
-    process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: '1d' }
-  );
-  const currentUser = { ...user, refreshToken };
-  await db.get('users').find({ email: user.email }).assign(currentUser).write();
-
   return {
-    accessToken,
-    refreshToken,
-    user: { id: user.id, name: user.name },
-    message: 'Logged in successfully',
+    user,
   };
 };
 
@@ -155,29 +125,25 @@ const signup = async ({
   department,
   empId,
 }) => {
-  const duplicate = db.get('users').find({ email }).value();
-  if (duplicate) {
-    throw new Error('Email already registered');
+  // check if user is already registered.
+  const isUserRegistered = await User.findOne({ email: email });
+  if (isUserRegistered) {
+    throw new Error('User already registerd');
   }
-
   //encrypt the password
   const hashedPwd = await bcrypt.hash(password, 10);
-
-  //store the new user
-  const newUser = {
-    id: Date.now().toString(),
+  // creating new user instance
+  const user = new User({
     name,
     email,
     password: hashedPwd,
     designation,
     department,
     empId,
-  };
-  db.get('users').push(newUser).write();
+  });
+  await user.save();
   return {
-    token: `fake-jwt-${newUser.id}-${Date.now()}`,
-    user: { id: newUser.id, name: newUser.name },
-    message: 'Sign up successful',
+    user,
   };
 };
 
@@ -188,6 +154,23 @@ const fetchEmployeeDetails = (req) => {
     .value()
     .employeeList[0].employees.find((emp) => emp.id === Number(id));
   return employee;
+};
+
+const seedEmployees = async () => {
+  try {
+    const employeeData = require('../../dummy.json');
+    const employees = employeeData.employeeList[0].employees;
+    await Employee.deleteMany({});
+
+    const createdUsers = await Employee.insertMany(employees);
+
+    return {
+      message: 'Employees seeded successfully',
+      count: createdUsers.length,
+    };
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
 module.exports = {
@@ -203,4 +186,5 @@ module.exports = {
   fetchFilters,
   fetchEmployeeDetails,
   logout,
+  seedEmployees,
 };

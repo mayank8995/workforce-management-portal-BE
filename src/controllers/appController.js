@@ -1,6 +1,7 @@
 const service = require('../services/appService');
-const db = require('../config/db');
-
+const db = require('../config/database');
+const employeeForm = require('../config/employeeFormConfig');
+const { validateSignupData } = require('../utils/validation');
 const getEmployees = (req, res) => {
   try {
     const response = service.fetchEmployeeList();
@@ -61,19 +62,12 @@ const getProfile = (req, res) => {
 };
 const login = async (req, res) => {
   try {
-    const response = await service.login(req.body);
-    const updatedResponse = {
-      token: response?.accessToken,
-      user: response?.user,
-      message: response?.message,
-    };
-    res.cookie('jwt', response?.refreshToken, {
-      httpOnly: true,
-      sameSite: 'None',
-      secure: true,
-      maxAge: 24 * 60 * 60 * 1000,
+    const response = await service.login(req, res);
+    res.status(200).json({
+      success: true,
+      message: 'User Logged in',
+      data: response,
     });
-    res.status(200).json(updatedResponse);
   } catch (error) {
     res.status(401).json({ success: false, message: error.message });
   }
@@ -144,10 +138,15 @@ const editProfile = (req, res) => {
 };
 const signup = async (req, res) => {
   try {
+    validateSignupData(req);
     const response = await service.signup(req.body);
-    res.status(201).json(response);
+    res.status(201).json({
+      success: true,
+      message: 'User added successfully',
+      data: response,
+    });
   } catch (error) {
-    res.status(409).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -161,6 +160,22 @@ const getEmployeeDetails = (req, res) => {
 };
 const checkServerHealth = (req, res) => {
   res.status(200).json({ status: 'ok' });
+};
+
+const fetchEmployeeFormConfig = (req, res) => {
+  try {
+    res.status(200).json(employeeForm);
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+const seedEmployees = async (req, res) => {
+  try {
+    const response = await service.seedEmployees();
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
 };
 
 module.exports = {
@@ -178,4 +193,6 @@ module.exports = {
   refreshToken,
   logout,
   checkServerHealth,
+  fetchEmployeeFormConfig,
+  seedEmployees,
 };

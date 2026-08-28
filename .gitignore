@@ -8,3 +8,6 @@ log/
 # Ignore all files with a specific extension
 *.log
 *.tmp
+.ggshield/
+.ggshield_cache/
+.cache_ggshield
