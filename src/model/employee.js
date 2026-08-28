@@ -220,6 +220,11 @@ const employeeSchema = new mongoose.Schema(
       required: true,
       default: false,
     },
+    level: {
+      type: String,
+      required: true,
+      enum: ['junior', 'senior', 'lead', 'admin', 'executive'],
+    },
   },
   {
     timestamps: true,

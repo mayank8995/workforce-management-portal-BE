@@ -4,38 +4,87 @@ require('dotenv').config();
 const migrateEmpIds = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URL);
-    const User = require('../model/user');
-    const Employee = require('../model/employee');
-
-    const users = await User.find({}, { email: 1, empId: 1 }).lean();
-
-    let updated = 0;
-    let notFound = 0;
-
-    for (const user of users) {
-      if (!user.email || !user.empId) {
-        continue;
-      }
-
-      const result = await Employee.updateOne(
-        { email: user.email },
-        {
-          $set: {
-            empId: user.empId,
+    const Role = require('../model/role');
+    const perm = [
+      {
+        name: 'admin',
+        levelPermissions: [],
+      },
+      {
+        name: 'employee',
+        levelPermissions: [
+          {
+            level: 'junior',
+            permissions: [
+              {
+                resource: 'dashboardView',
+                actions: ['read'],
+              },
+              {
+                resource: 'employeeView',
+                actions: ['read'],
+              },
+              {
+                resource: 'analyticsView',
+                actions: ['read'],
+              },
+            ],
           },
-        }
-      );
-
-      if (result.matchedCount === 0) {
-        console.log(`Employee not found: ${user.email}`);
-        notFound++;
-      } else if (result.modifiedCount > 0) {
-        updated++;
-      }
-    }
-
-    console.log(`Updated: ${updated}`);
-    console.log(`Not found: ${notFound}`);
+          {
+            level: 'senior',
+            permissions: [
+              {
+                resource: 'dashboardView',
+                actions: ['read', 'update'],
+              },
+              {
+                resource: 'employeeView',
+                actions: ['read', 'update'],
+              },
+              {
+                resource: 'analyticsView',
+                actions: ['read'],
+              },
+            ],
+          },
+          {
+            level: 'lead',
+            permissions: [
+              {
+                resource: 'dashboardView',
+                actions: ['read', 'update', 'create'],
+              },
+              {
+                resource: 'employeeView',
+                actions: ['read', 'update'],
+              },
+              {
+                resource: 'analyticsView',
+                actions: ['read'],
+              },
+            ],
+          },
+          {
+            level: 'executive',
+            permissions: [
+              {
+                resource: 'dashboardView',
+                actions: ['read', 'update', 'create'],
+              },
+              {
+                resource: 'employeeView',
+                actions: ['read', 'update', 'create'],
+              },
+              {
+                resource: 'analyticsView',
+                actions: ['read'],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+    await Role.insertMany(perm);
   } catch (error) {
     console.error('Migration failed:', error);
   } finally {
