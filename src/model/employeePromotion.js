@@ -37,6 +37,13 @@ const employeePromotionSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+employeePromotionSchema.index({
+  promotedOn: -1,
+});
+
+employeePromotionSchema.index({
+  employeeId: 1,
+});
 const EmployeePromotion = mongoose.model(
   'EmployeePromotion',
   employeePromotionSchema

@@ -231,4 +231,25 @@ const employeeSchema = new mongoose.Schema(
   }
 );
 
+employeeSchema.index({
+  department: 1,
+  rating: -1,
+});
+
+employeeSchema.index({
+  designation: 1,
+});
+
+employeeSchema.index({
+  workMode: 1,
+});
+
+employeeSchema.index({
+  attendancePercentage: -1,
+});
+
+employeeSchema.index({
+  onNoticePeriod: 1,
+});
+
 module.exports = mongoose.model('Employee', employeeSchema);
