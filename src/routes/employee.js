@@ -1,6 +1,7 @@
 const employeeRouter = require('express').Router();
 const appController = require('../controllers/appController');
 const analyticsController = require('../controllers/analyticsController');
+const employeesController = require('../controllers/employeeController');
 const { verifyJWT } = require('../middleware/verifyJWT');
 employeeRouter.get(
   '/paginatedEmployeeList',
@@ -24,13 +25,22 @@ employeeRouter.get(
 
   appController.fetchEmployeeFormConfig
 );
+
 employeeRouter.get(
-  '/employee/analytics/:type',
-  analyticsController.fetchEmployeeAnalytics
-);
-employeeRouter.post(
-  '/employee/analytics/populate/:type',
-  analyticsController.populateEmployeeAnalytics
+  '/analytics/:metric/employees',
+  verifyJWT,
+  analyticsController.getMetricEmployees
 );
 
+employeeRouter.get('/employees', verifyJWT, employeesController.getEmployees);
+employeeRouter.get(
+  '/employee/profile',
+  verifyJWT,
+  employeesController.getEmployeeProfile
+);
+employeeRouter.get(
+  '/employee/details',
+  verifyJWT,
+  employeesController.getEmployeeDetails
+);
 module.exports = employeeRouter;

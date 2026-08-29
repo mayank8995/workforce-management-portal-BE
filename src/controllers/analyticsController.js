@@ -24,4 +24,44 @@ const populateEmployeeAnalytics = async (req, res) => {
   }
 };
 
-module.exports = { fetchEmployeeAnalytics, populateEmployeeAnalytics };
+const getMetricEmployees = async (req, res) => {
+  try {
+    const { metric } = req.params;
+
+    const allowedMetrics = [
+      'topPerformers',
+      'meetingKPIs',
+      'promotedThisYear',
+      'requiringReview',
+    ];
+
+    if (!allowedMetrics.includes(metric)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid analytics metric',
+      });
+    }
+
+    let result;
+
+    if (metric === 'promotedThisYear') {
+      result = await service.getPromotedEmployees(req.query);
+    } else {
+      result = await service.getEmployeeMetric(metric, req.query);
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+      messaged: 'Fetched successfully !!',
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = {
+  fetchEmployeeAnalytics,
+  populateEmployeeAnalytics,
+  getMetricEmployees,
+};
