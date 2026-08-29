@@ -40,6 +40,23 @@ const EMPLOYEE_SAFE_DATA = [
   'attendancePercentage',
   'employeeSatisfaction',
   'onNoticePeriod',
+  'level',
+];
+const ALLOWED_EDITABLE_FIELDS = [
+  'name',
+  'department',
+  'designation',
+  'phone',
+  'manager',
+  'salary',
+  'location',
+  'workMode',
+  'projects',
+  'skills',
+  'rating',
+  'employeeSatisfaction',
+  'onNoticePeriod',
+  'level',
 ];
 const REVIEW_REASON = ['Low rating', 'Low Attendance', 'On Notice'];
 const commonFields = {
@@ -101,4 +118,5 @@ module.exports = {
   EMPLOYEE_SAFE_DATA,
   REVIEW_REASON,
   commonFields,
+  ALLOWED_EDITABLE_FIELDS,
 };

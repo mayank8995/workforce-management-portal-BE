@@ -52,6 +52,12 @@ const projectSchema = new mongoose.Schema({
   },
 });
 
+const CounterSchema = new mongoose.Schema({
+  _id: { type: String, required: true },
+  seq: { type: Number, default: 299 },
+});
+const Counter = mongoose.model('Counter', CounterSchema);
+
 const employeeSchema = new mongoose.Schema(
   {
     name: {
@@ -84,7 +90,6 @@ const employeeSchema = new mongoose.Schema(
     },
     empId: {
       type: String,
-      required: true,
       unique: true,
       trim: true,
     },
@@ -230,6 +235,15 @@ const employeeSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+employeeSchema.pre('save', async function () {
+  const counter = await Counter.findOneAndUpdate(
+    { _id: 'empId' },
+    { $inc: { seq: 1 } },
+    { returnDocument: true, upsert: true }
+  );
+  this.empId = `B/${counter.seq}`;
+});
 
 employeeSchema.index({
   department: 1,

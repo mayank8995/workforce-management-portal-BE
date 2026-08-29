@@ -1,4 +1,5 @@
 const validator = require('validator');
+const { EMPLOYEE_SAFE_DATA, ALLOWED_EDITABLE_FIELDS } = require('./constants');
 const validateSignupData = (req) => {
   const { name, email, empId, password, department, designation } = req.body;
   if (!name) {
@@ -24,7 +25,23 @@ const validateProfileEditData = (req) => {
   return isAllowed;
 };
 
+const validateCreateEmployeeData = (req) => {
+  const isAllowed = Object.keys(req.body).every((k) =>
+    EMPLOYEE_SAFE_DATA.includes(k)
+  );
+  return isAllowed;
+};
+const validateEditEmployeeData = (req) => {
+  console.log(req.body);
+  const isAllowed = Object.keys(req.body).every((k) =>
+    ALLOWED_EDITABLE_FIELDS.includes(k)
+  );
+  return isAllowed;
+};
+
 module.exports = {
   validateSignupData,
   validateProfileEditData,
+  validateCreateEmployeeData,
+  validateEditEmployeeData,
 };
