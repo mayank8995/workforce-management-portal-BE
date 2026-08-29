@@ -1,0 +1,11 @@
+const analyticsRouter = require('express').Router();
+const analyticsController = require('../controllers/analyticsController');
+const { verifyJWT } = require('../middleware/verifyJWT');
+
+analyticsRouter.get(
+  '/dashboard/analytics',
+  verifyJWT,
+  analyticsController.getAnalytics
+);
+
+module.exports = analyticsRouter;

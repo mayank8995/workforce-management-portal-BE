@@ -10,13 +10,15 @@ const employeeRouter = require('./src/routes/employee');
 const profileRouter = require('./src/routes/profile');
 const healthCheckRouter = require('./src/routes/health');
 const corsOptions = require('./src/config/cors');
+const analyticsRouter = require('./src/routes/analytics');
 
 app.use(cors(corsOptions));
 
 app.use('/', healthCheckRouter);
 app.use('/', authRouter);
 app.use('/', employeeRouter);
-app.use('/', profileRouter);
+app.use('/', analyticsRouter);
+// app.use('/', profileRouter);
 
 const PORT = process.env.PORT || 3000;
 

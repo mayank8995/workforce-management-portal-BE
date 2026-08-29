@@ -11,6 +11,9 @@ const {
   PROMOTION_SORT_FIELDS,
 } = require('../config/employee.querybuilding');
 const Employee = require('../model/employee');
+const Client = require('../model/client');
+const employee = require('../model/employee');
+//To do remove
 const fetchTopPerformers = async (req, res) => {
   const type = req?.params?.type;
   if (type !== 'topPerformers') {
@@ -190,6 +193,7 @@ const fetchEmployeeAnalytics = async (req, res) => {
     throw new Error(error);
   }
 };
+//
 const getEmployeeMetric = async (metric, query) => {
   const config = METRIC_CONFIG[metric];
 
@@ -326,7 +330,6 @@ const getPromotedEmployees = async (query) => {
   const skip = (page - 1) * limit;
 
   const employeeFilters = buildEmployeeFilters(query, 'employee.');
-  console.log('employeeFilters>>>', employeeFilters);
   const employeeSearch = buildSearch(query.search, 'employee.');
 
   const sortField = PROMOTION_SORT_FIELDS[query.sortBy] || 'promotedOn';
@@ -336,7 +339,6 @@ const getPromotedEmployees = async (query) => {
   const employeeCondition = {
     ...employeeFilters,
   };
-  console.log('employeeCondition>>>', employeeCondition, employeeSearch);
 
   const promotionMatch = METRIC_CONFIG.promotedThisYear.match;
 
@@ -440,10 +442,137 @@ const getPromotedEmployees = async (query) => {
     },
   };
 };
-
+const getAnalytics = async () => {
+  const result = await Client.aggregate([
+    {
+      $facet: {
+        totalAmount: [
+          {
+            $group: {
+              _id: null,
+              count: { $sum: `$monthlyRevenue` },
+            },
+          },
+        ],
+        topClients: [
+          {
+            $sort: {
+              monthlyRevenue: -1,
+            },
+          },
+          {
+            $limit: 10,
+          },
+          {
+            $project: {
+              _id: 0,
+              client: '$name',
+              industry: '$industry',
+              revenueCr: '$monthlyRevenue',
+            },
+          },
+        ],
+      },
+    },
+  ]);
+  const totalRevenue = result?.[0]?.totalAmount?.[0]?.count || 0;
+  const topClients = result?.[0]?.topClients;
+  const data = await Employee.aggregate([
+    {
+      $facet: {
+        activeProjects: [
+          { $unwind: '$projects' },
+          { $match: { 'projects.status': 'Active' } },
+          { $count: 'count' },
+        ],
+        headcountByLocation: [
+          {
+            $group: {
+              _id: '$location',
+              employeeCount: { $sum: 1 },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              city: '$_id',
+              employeeCount: 1,
+            },
+          },
+        ],
+        projectStatusDistribution: [
+          { $unwind: '$projects' },
+          {
+            // Step 1: Count occurrences of each unique value
+            $group: {
+              _id: '$projects.status', // Group by the value of the 'status' field
+              count: { $sum: 1 },
+            },
+          },
+          {
+            // Step 2: Format into a key-value pair array [{ k: "active", v: 5 }]
+            $group: {
+              _id: null,
+              counts: {
+                $push: {
+                  k: '$_id', // The dynamic key name
+                  v: '$count', // The count value
+                },
+              },
+            },
+          },
+          {
+            // Step 3: Convert the array of pairs into a single object root
+            $replaceRoot: {
+              newRoot: { $arrayToObject: '$counts' },
+            },
+          },
+        ],
+        departmentHeadcount: [
+          {
+            $group: {
+              _id: '$department',
+              count: { $sum: 1 },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              counts: {
+                $push: {
+                  k: '$_id',
+                  v: '$count',
+                },
+              },
+            },
+          },
+          {
+            $replaceRoot: {
+              newRoot: { $arrayToObject: '$counts' },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+  let summary = {
+    totalRevenue,
+    profitMargin: 23.4,
+    activeProjects: data?.[0]?.activeProjects?.[0]?.count,
+    attritionRate: 12.8, // hardcoded for now
+  };
+  return {
+    summary,
+    headcountByLocation: data?.[0]?.headcountByLocation,
+    projectStatusDistribution: data?.[0]?.projectStatusDistribution,
+    departmentHeadcount: data?.[0]?.departmentHeadcount,
+    topClients,
+  };
+};
 module.exports = {
   fetchEmployeeAnalytics,
   populateEmployeeAnalytics,
   getEmployeeMetric,
   getPromotedEmployees,
+  getAnalytics,
 };

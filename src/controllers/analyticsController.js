@@ -60,8 +60,22 @@ const getMetricEmployees = async (req, res) => {
   }
 };
 
+const getAnalytics = async (req, res) => {
+  try {
+    const result = await service.getAnalytics(req);
+    return res.status(200).json({
+      success: true,
+      data: result,
+      messaged: 'Fetched successfully !!',
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   fetchEmployeeAnalytics,
   populateEmployeeAnalytics,
   getMetricEmployees,
+  getAnalytics,
 };
