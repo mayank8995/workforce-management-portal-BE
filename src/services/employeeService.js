@@ -6,6 +6,10 @@ const {
   ALLOWED_EMPLOYEE_PROFILE_FIELDS,
 } = require('../config/employee.querybuilding');
 const Employee = require('../model/employee');
+const {
+  validateCreateEmployeeData,
+  validateEditEmployeeData,
+} = require('../utils/validation');
 const getEmployees = async (query) => {
   const page = Math.max(Number(query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(query.limit) || 10, 1), 100);
@@ -99,4 +103,41 @@ const getEmployeeDetails = async (query) => {
     result,
   };
 };
-module.exports = { getEmployees, getEmployeeDetails, getEmployeeProfile };
+
+const createEmployee = async (req) => {
+  const isAllowed = validateCreateEmployeeData(req);
+  if (!isAllowed) {
+    throw new Error('Invalid Employee data');
+  }
+  const employee = await Employee({
+    ...(req?.body || {}),
+  });
+  const data = await employee.save();
+  return {
+    data,
+  };
+};
+const editEmployee = async (req) => {
+  const isAllowed = validateEditEmployeeData(req);
+  if (!isAllowed) {
+    throw new Error('Invalid editable data');
+  }
+  const { id } = req?.params;
+  const employee = await Employee.findByIdAndUpdate(
+    { _id: id },
+    {
+      ...(req?.body || {}),
+    },
+    { returnDocument: 'after' }
+  );
+  return {
+    employee,
+  };
+};
+module.exports = {
+  getEmployees,
+  getEmployeeDetails,
+  getEmployeeProfile,
+  createEmployee,
+  editEmployee,
+};

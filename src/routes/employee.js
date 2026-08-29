@@ -43,4 +43,15 @@ employeeRouter.get(
   verifyJWT,
   employeesController.getEmployeeDetails
 );
+employeeRouter.post(
+  '/employee/create',
+  verifyJWT,
+  employeesController.createEmployee
+);
+employeeRouter.post(
+  '/employee/edit/:id',
+  verifyJWT,
+  employeesController.editEmployee
+);
+
 module.exports = employeeRouter;

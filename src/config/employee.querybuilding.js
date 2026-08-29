@@ -9,6 +9,7 @@ const ALLOWED_SORT_FIELDS = {
   department: 'department',
   location: 'location',
   workMode: 'workMode',
+  empId: 'empId',
 };
 
 const PROMOTION_SORT_FIELDS = {
