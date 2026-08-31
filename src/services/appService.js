@@ -55,27 +55,44 @@ const login = async (req, res) => {
   } else {
     throw new Error('Invalid credentials');
   }
+  const employee = await Employee.find({ email: user.email });
   return {
-    user,
+    // 'name department designation email empId'
+    _id: employee?.[0]?._id,
+    name: user.name,
+    department: user.department,
+    designation: user.designation,
+    email: user.email,
+    empId: user.empId,
   };
 };
 
 const logout = async (req, res) => {
-  const cookies = req.cookies;
-  const refreshToken = cookies.jwt;
-  const user = db.get('users').find({ refreshToken: refreshToken }).value();
-  if (!user) {
-    res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+  // const cookies = req.cookies;
+  // const refreshToken = cookies.jwt;
+  // const user = db.get('users').find({ refreshToken: refreshToken }).value();
+  // if (!user) {
+  //   res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+  // }
+  // // delete refresh token from db;
+  // if (user) {
+  //   delete user.refreshToken;
+  //   await db.write();
+  // }
+  // res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+  // return {
+  //   success: true,
+  // };
+  try {
+    res.cookie('token', null, {
+      expires: new Date(Date.now()),
+    });
+    return {
+      success: true,
+    };
+  } catch (error) {
+    throw new Error(error);
   }
-  // delete refresh token from db;
-  if (user) {
-    delete user.refreshToken;
-    await db.write();
-  }
-  res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
-  return {
-    success: true,
-  };
 };
 
 const addProfile = ({
@@ -117,14 +134,7 @@ const editProfile = (payload) => {
   return { message: 'Profile edited successfully' };
 };
 
-const signup = async ({
-  name,
-  email,
-  password,
-  designation,
-  department,
-  empId,
-}) => {
+const signup = async ({ name, email, password, designation, department }) => {
   // check if user is already registered.
   const isUserRegistered = await User.findOne({ email: email });
   if (isUserRegistered) {
@@ -139,7 +149,6 @@ const signup = async ({
     password: hashedPwd,
     designation,
     department,
-    empId,
   });
   await user.save();
   return {

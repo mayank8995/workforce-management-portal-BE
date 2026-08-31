@@ -1,12 +1,18 @@
 const validator = require('validator');
-const { EMPLOYEE_SAFE_DATA, ALLOWED_EDITABLE_FIELDS } = require('./constants');
+const {
+  EMPLOYEE_SAFE_DATA,
+  ALLOWED_EDITABLE_FIELDS,
+  ALLOWED_EDITS_USER_PROFILE,
+} = require('./constants');
 const validateSignupData = (req) => {
-  const { name, email, empId, password, department, designation } = req.body;
+  const { name, email, password, department, designation } = req.body;
   if (!name) {
     throw new Error(`Name is required`);
-  } else if (!validator.isAlphanumeric(empId, 'en-US', { ignore: '/' })) {
-    throw new Error('Please provide a valid employee Id');
-  } else if (!validator.isEmail(email)) {
+  }
+  // else if (!validator.isAlphanumeric(empId, 'en-US', { ignore: '/' })) {
+  //   throw new Error('Please provide a valid employee Id');
+  // }
+  else if (!validator.isEmail(email)) {
     throw new Error('Email Id is invalid');
   } else if (!validator.isStrongPassword(password)) {
     throw new Error('Password is weak');
@@ -18,9 +24,8 @@ const validateSignupData = (req) => {
 };
 
 const validateProfileEditData = (req) => {
-  const ALLOWED_EDITS = ['photoUrl'];
   const isAllowed = Object.keys(req.body).every((k) =>
-    ALLOWED_EDITS.includes(k)
+    ALLOWED_EDITS_USER_PROFILE.includes(k)
   );
   return isAllowed;
 };

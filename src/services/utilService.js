@@ -390,4 +390,5 @@ const getTopProjects = function (data) {
 module.exports = {
   getList,
   fetchFiltersList,
+  extract,
 };

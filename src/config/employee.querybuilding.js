@@ -36,32 +36,63 @@ const buildRange = (min, max) => {
   return Object.keys(condition).length ? condition : undefined;
 };
 
+const toArray = (value) => {
+  if (!value) return [];
+
+  return Array.isArray(value) ? value : value.split(',');
+};
+
 const buildEmployeeFilters = (query, prefix = '') => {
   const filters = {};
 
   const field = (name) => `${prefix}${name}`;
 
-  // if (query.name) {
-  //   filters[field('name')] = query.name;
-  // }
-  if (query.department) {
-    filters[field('department')] = query.department;
+  const department = toArray(query.department);
+
+  if (department.length) {
+    filters[field('department')] = {
+      $in: department,
+    };
   }
 
-  if (query.designation) {
-    filters[field('designation')] = query.designation;
+  const designation = toArray(query.designation);
+
+  if (designation.length) {
+    filters[field('designation')] = {
+      $in: designation,
+    };
   }
 
-  if (query.location) {
-    filters[field('location')] = query.location;
+  const location = toArray(query.location);
+
+  if (location.length) {
+    filters[field('location')] = {
+      $in: location,
+    };
   }
 
-  if (query.workMode) {
-    filters[field('workMode')] = query.workMode;
+  const workMode = toArray(query.workMode);
+
+  if (workMode.length) {
+    filters[field('workMode')] = {
+      $in: workMode,
+    };
   }
 
-  if (query.employeeSatisfaction) {
-    filters[field('employeeSatisfaction')] = query.employeeSatisfaction;
+  const previousDesignation = toArray(query.previousDesignation);
+
+  if (previousDesignation.length) {
+    filters[field(`previousDesignation`)] = {
+      $in: previousDesignation,
+    };
+  }
+
+  const employeeSatisfaction = toArray(query.employeeSatisfaction);
+
+  if (employeeSatisfaction.length) {
+    filters[field('employeeSatisfaction')] = {
+      $in: employeeSatisfaction,
+    };
   }
 
   if (query.onNoticePeriod !== undefined) {
@@ -92,16 +123,28 @@ const buildEmployeeFilters = (query, prefix = '') => {
     filters[field('salary')] = salary;
   }
 
-  if (query.skill) {
-    filters[field('skills')] = query.skill;
+  const skill = toArray(query.skill);
+
+  if (skill.length) {
+    filters[field('skills')] = {
+      $in: skill,
+    };
   }
 
-  if (query.projectStatus) {
-    filters[`${prefix}projects.status`] = query.projectStatus;
+  const projectStatus = toArray(query.projectStatus);
+
+  if (projectStatus.length) {
+    filters[`${prefix}projects.status`] = {
+      $in: projectStatus,
+    };
   }
 
-  if (query.riskStatus) {
-    filters[`${prefix}projects.riskStatus`] = query.riskStatus;
+  const riskStatus = toArray(query.riskStatus);
+
+  if (riskStatus.length) {
+    filters[`${prefix}projects.riskStatus`] = {
+      $in: riskStatus,
+    };
   }
 
   return filters;
@@ -174,17 +217,6 @@ const METRIC_CONFIG = {
 
   requiringReview: {
     source: 'employee',
-
-    /*
-     * This matches YOUR CURRENT DATABASE:
-     *
-     * (rating < 4 AND attendance < 88)
-     * OR
-     * onNoticePeriod = true
-     *
-     * Your stored analytics count is 46, which matches
-     * this rule.
-     */
     match: {
       $or: [
         { rating: { $lt: 4 } },
@@ -198,7 +230,6 @@ const METRIC_CONFIG = {
 
   promotedThisYear: {
     source: 'promotion',
-
     match: {
       promotedOn: {
         $gte: new Date('2024-01-01T00:00:00.000Z'),
@@ -209,6 +240,7 @@ const METRIC_CONFIG = {
 };
 
 const EMPLOYEE_PROJECTION = {
+  _id: 1,
   name: 1,
   email: 1,
   empId: 1,
@@ -228,6 +260,28 @@ const EMPLOYEE_PROJECTION = {
   employeeSatisfaction: 1,
   onNoticePeriod: 1,
 };
+const EMPLOYEE_SET = {
+  $set: {
+    name: '$name',
+    email: '$email',
+    empId: '$empId',
+    department: '$department',
+    designation: '$designation',
+    phone: '$phone',
+    manager: '$manager',
+    joiningDate: '$joiningDate',
+    yearsOfExperience: '$yearsOfExperience',
+    salary: '$salary',
+    location: '$location',
+    workMode: '$workMode',
+    projects: '$projects',
+    skills: '$skills',
+    rating: '$rating',
+    attendancePercentage: '$attendancePercentage',
+    employeeSatisfaction: '$employeeSatisfaction',
+    onNoticePeriod: '$onNoticePeriod',
+  },
+};
 
 const ALLOWED_EMPLOYEE_PROFILE_FIELDS = [
   'name',
@@ -237,7 +291,32 @@ const ALLOWED_EMPLOYEE_PROFILE_FIELDS = [
   'designation',
   'phone',
   'skills',
+  'workMode',
+  'location',
+  'joiningDate',
 ];
+
+const filterableFields = [
+  'department',
+  'designation',
+  'location',
+  // 'projects$projectName',
+  // 'projects$priorityRanking',
+  // 'projects$riskStatus',
+  // 'projects$status',
+  // 'reviewReason',
+  'workMode',
+];
+const filterableFieldsTopProjects = [
+  'projects$projectName',
+  // 'projects$priorityRanking',
+  'projects$riskStatus',
+  // 'projects$status',
+];
+const filterableFieldsTopPerformers = ['department', 'designation'];
+
+const filterableFieldsPromoted = ['department', 'designation'];
+const filterableFieldsReview = ['department', 'designation'];
 
 module.exports = {
   ALLOWED_SORT_FIELDS,
@@ -247,4 +326,10 @@ module.exports = {
   PROMOTION_SORT_FIELDS,
   METRIC_CONFIG,
   ALLOWED_EMPLOYEE_PROFILE_FIELDS,
+  EMPLOYEE_SET,
+  filterableFields,
+  filterableFieldsReview,
+  filterableFieldsPromoted,
+  filterableFieldsTopPerformers,
+  filterableFieldsTopProjects,
 };

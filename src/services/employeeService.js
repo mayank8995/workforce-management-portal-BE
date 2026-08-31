@@ -6,6 +6,7 @@ const {
   ALLOWED_EMPLOYEE_PROFILE_FIELDS,
 } = require('../config/employee.querybuilding');
 const Employee = require('../model/employee');
+const User = require('../model/user');
 const {
   validateCreateEmployeeData,
   validateEditEmployeeData,
@@ -31,6 +32,7 @@ const getEmployees = async (query) => {
   const sortField = ALLOWED_SORT_FIELDS[query.sortBy] || 'name';
 
   const sortOrder = query.sortOrder === 'desc' ? -1 : 1;
+  console.log('match>>', match);
 
   const result = await Employee.aggregate([
     {
@@ -72,11 +74,13 @@ const getEmployees = async (query) => {
   const total = result[0]?.total[0]?.count || 0;
 
   return {
-    data: result[0]?.data || [],
+    employees: result[0]?.data || [],
     pagination: {
       page,
       limit,
       total,
+      sortOrder: sortOrder === -1 ? 'desc' : 'asc',
+      sortBy: sortField,
       totalPages: Math.ceil(total / limit),
       hasNextPage: page * limit < total,
       hasPreviousPage: page > 1,
@@ -86,12 +90,26 @@ const getEmployees = async (query) => {
 
 const getEmployeeProfile = async (query) => {
   const { _id } = query;
-  const result = await Employee.findById(_id).select(
-    ALLOWED_EMPLOYEE_PROFILE_FIELDS.join(' ')
-  );
+
+  const result = await Employee.findById(_id)
+    .select(ALLOWED_EMPLOYEE_PROFILE_FIELDS.join(' '))
+    .lean();
   return {
-    result,
+    ...result,
+    joiningDate: new Date().toISOString()?.split('T')?.[0],
   };
+};
+
+const editEmployeeProfile = async (req) => {
+  const { name, phone, email } = req.body;
+  console.log(name, phone, email);
+  await User.findOneAndUpdate({ email }, { name });
+  await Employee.findOneAndUpdate(
+    { email },
+    { name, phone },
+    { returnDocument: true }
+  );
+  return true;
 };
 
 const getEmployeeDetails = async (query) => {
@@ -140,4 +158,5 @@ module.exports = {
   getEmployeeProfile,
   createEmployee,
   editEmployee,
+  editEmployeeProfile,
 };
