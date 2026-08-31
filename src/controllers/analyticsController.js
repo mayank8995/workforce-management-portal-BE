@@ -1,28 +1,4 @@
 const service = require('../services/analyticsService');
-const fetchEmployeeAnalytics = async (req, res) => {
-  try {
-    const response = await service.fetchEmployeeAnalytics(req);
-    res.status(200).json({
-      success: true,
-      message: 'fetched data',
-      data: response,
-    });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-const populateEmployeeAnalytics = async (req, res) => {
-  try {
-    const response = await service.populateEmployeeAnalytics(req);
-    res.status(200).json({
-      success: true,
-      message: 'fetched data',
-      data: response,
-    });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
 
 const getMetricEmployees = async (req, res) => {
   try {
@@ -53,7 +29,7 @@ const getMetricEmployees = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: result,
-      messaged: 'Fetched successfully !!',
+      message: 'Fetched successfully !!',
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
@@ -66,16 +42,34 @@ const getAnalytics = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: result,
-      messaged: 'Fetched successfully !!',
+      message: 'Fetched successfully !!',
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
+    c;
+  }
+};
+
+const getFilters = async (req, res) => {
+  try {
+    const result = await service.fetchFilters(req);
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+      message: 'Fetched successfully !!',
+    });
+  } catch (error) {
+    return res.status(200).json({
+      success: true,
+      data: result,
+      message: 'Fetched successfully !!',
+    });
   }
 };
 
 module.exports = {
-  fetchEmployeeAnalytics,
-  populateEmployeeAnalytics,
   getMetricEmployees,
   getAnalytics,
+  getFilters,
 };

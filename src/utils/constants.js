@@ -24,7 +24,6 @@ const EMPLOYEE_SATISFACTION = ['Low', 'Medium', 'High'];
 const EMPLOYEE_SAFE_DATA = [
   'name',
   'email',
-  'empId',
   'department',
   'designation',
   'phone',
@@ -58,7 +57,8 @@ const ALLOWED_EDITABLE_FIELDS = [
   'onNoticePeriod',
   'level',
 ];
-const REVIEW_REASON = ['Low rating', 'Low Attendance', 'On Notice'];
+const ALLOWED_EDITS_USER_PROFILE = ['name', 'phone', 'skills', 'image'];
+const REVIEW_REASON = ['Low Rating', 'Low Attendance', 'On Notice'];
 const commonFields = {
   title: {
     type: String,
@@ -109,6 +109,87 @@ const commonFields = {
     maxLength: 100,
   },
 };
+
+const revenueTrend = [
+  {
+    month: 'Dec 23',
+    revenueCr: 870,
+  },
+  {
+    month: 'Jan 24',
+    revenueCr: 910,
+  },
+  {
+    month: 'Feb 24',
+    revenueCr: 960,
+  },
+  {
+    month: 'Mar 24',
+    revenueCr: 1030,
+  },
+  {
+    month: 'Apr 24',
+    revenueCr: 1120,
+  },
+  {
+    month: 'May 24',
+    revenueCr: 1245,
+  },
+];
+const skillsInDemand = [
+  {
+    skill: 'AWS',
+    employeeCount: 13,
+  },
+  {
+    skill: 'React',
+    employeeCount: 12,
+  },
+  {
+    skill: 'Node.js',
+    employeeCount: 11,
+  },
+  {
+    skill: 'Python',
+    employeeCount: 10,
+  },
+  {
+    skill: 'Django',
+    employeeCount: 9,
+  },
+];
+const attritionInsights = {
+  thisMonth: 142,
+  lastMonth: 167,
+  employeesOnNoticePeriod: 15,
+  yearlyAttritionRate: 12.8,
+  trend: [
+    {
+      month: 'Dec 23',
+      rate: 14.1,
+    },
+    {
+      month: 'Jan 24',
+      rate: 13.7,
+    },
+    {
+      month: 'Feb 24',
+      rate: 13.2,
+    },
+    {
+      month: 'Mar 24',
+      rate: 12.9,
+    },
+    {
+      month: 'Apr 24',
+      rate: 13,
+    },
+    {
+      month: 'May 24',
+      rate: 12.8,
+    },
+  ],
+};
 module.exports = {
   PROJECT_STATUS,
   RISK_STATUS,
@@ -119,4 +200,8 @@ module.exports = {
   REVIEW_REASON,
   commonFields,
   ALLOWED_EDITABLE_FIELDS,
+  revenueTrend,
+  skillsInDemand,
+  attritionInsights,
+  ALLOWED_EDITS_USER_PROFILE,
 };

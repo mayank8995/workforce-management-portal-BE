@@ -6,7 +6,7 @@ const getEmployees = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: result,
-      messaged: 'Fetched successfully !!',
+      message: 'Fetched successfully !!',
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
@@ -19,7 +19,7 @@ const getEmployeeDetails = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: result,
-      messaged: 'Fetched successfully !!',
+      message: 'Fetched successfully !!',
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
@@ -32,7 +32,18 @@ const getEmployeeProfile = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: result,
-      messaged: 'Fetched successfully !!',
+      message: 'Fetched successfully !!',
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+const editEmployeeProfile = async (req, res) => {
+  try {
+    const result = await service.editEmployeeProfile(req);
+    return res.status(201).json({
+      success: result,
+      message: 'Updated successfully !!',
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
@@ -45,7 +56,7 @@ const createEmployee = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: result,
-      messaged: 'Created successfully !!',
+      message: 'Created successfully !!',
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
@@ -57,7 +68,7 @@ const editEmployee = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: result,
-      messaged: 'Edited successfully !!',
+      message: 'Edited successfully !!',
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
@@ -70,4 +81,5 @@ module.exports = {
   getEmployeeDetails,
   createEmployee,
   editEmployee,
+  editEmployeeProfile,
 };
