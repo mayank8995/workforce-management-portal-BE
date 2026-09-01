@@ -11,6 +11,7 @@ const {
   validateCreateEmployeeData,
   validateEditEmployeeData,
 } = require('../utils/validation');
+const { updateEmployeeAnalytics } = require('./analyticsService');
 const getEmployees = async (query) => {
   const page = Math.max(Number(query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(query.limit) || 10, 1), 100);
@@ -84,6 +85,7 @@ const getEmployees = async (query) => {
       totalPages: Math.ceil(total / limit),
       hasNextPage: page * limit < total,
       hasPreviousPage: page > 1,
+      tableType: 'employees',
     },
   };
 };
@@ -96,13 +98,12 @@ const getEmployeeProfile = async (query) => {
     .lean();
   return {
     ...result,
-    joiningDate: new Date().toISOString()?.split('T')?.[0],
+    joiningDate: new Date(result?.joiningDate).toISOString()?.split('T')?.[0],
   };
 };
 
 const editEmployeeProfile = async (req) => {
   const { name, phone, email } = req.body;
-  console.log(name, phone, email);
   await User.findOneAndUpdate({ email }, { name });
   await Employee.findOneAndUpdate(
     { email },
@@ -114,11 +115,17 @@ const editEmployeeProfile = async (req) => {
 
 const getEmployeeDetails = async (query) => {
   const { _id } = query;
-  const result = await Employee.findById(_id).select(
-    '-_id -createdAt -updatedAt -__v'
-  );
+  if (!_id) {
+    throw new Error('Employee ID is required');
+  }
+  const result = await Employee.findById(_id)
+    .select('-_id -createdAt -updatedAt -__v')
+    .lean();
   return {
-    result,
+    result: {
+      ...result,
+      joiningDate: new Date(result?.joiningDate).toISOString()?.split('T')?.[0],
+    },
   };
 };
 
@@ -136,18 +143,56 @@ const createEmployee = async (req) => {
   };
 };
 const editEmployee = async (req) => {
-  const isAllowed = validateEditEmployeeData(req);
-  if (!isAllowed) {
-    throw new Error('Invalid editable data');
-  }
-  const { id } = req?.params;
+  const { _id } = req?.query || {};
+  const {
+    name,
+    department,
+    designation,
+    phone,
+    manager,
+    salary,
+    location,
+    workMode,
+    projects,
+    skills,
+    rating,
+    employeeSatisfaction,
+    onNoticePeriod,
+    level,
+  } = req?.body || {};
   const employee = await Employee.findByIdAndUpdate(
-    { _id: id },
+    { _id: _id },
     {
-      ...(req?.body || {}),
+      name,
+      department,
+      designation,
+      phone,
+      manager,
+      salary,
+      location,
+      workMode,
+      projects,
+      skills,
+      rating,
+      employeeSatisfaction,
+      onNoticePeriod,
+      level,
     },
     { returnDocument: 'after' }
   );
+  // To do need to handle it better way, currently it is updating all the analytics data on every employee edit, need to update only the required analytics data based on the changes made in employee data.
+  await updateEmployeeAnalytics({ type: 'topPerformers' });
+  await updateEmployeeAnalytics({ type: 'meetingKPIs' });
+  await updateEmployeeAnalytics({ type: 'promotedThisYear' });
+  await updateEmployeeAnalytics({ type: 'requiringReview' });
+  return {
+    employee,
+  };
+};
+const deleteEmployee = async (query) => {
+  const { _id } = query;
+  const employee = await Employee.findByIdAndDelete(_id).lean();
+  await User.findOneAndDelete({ email: employee?.email });
   return {
     employee,
   };
@@ -159,4 +204,5 @@ module.exports = {
   createEmployee,
   editEmployee,
   editEmployeeProfile,
+  deleteEmployee,
 };
