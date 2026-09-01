@@ -5,7 +5,7 @@ const permissionSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      enum: ['dashboardView', 'employeeView', 'analyticsView'],
+      enum: ['dashboard', 'employee', 'analytics', 'settings', 'viewmore'],
     },
     actions: [
       {

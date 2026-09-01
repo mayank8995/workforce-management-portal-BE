@@ -72,6 +72,14 @@ const userSchema = new mongoose.Schema(
       minLength: 2,
       maxLength: 35,
     },
+    role: {
+      type: String,
+      trim: true,
+      enum: {
+        values: ['admin', 'employee'],
+        message: `{VALUE} is invalid role type`,
+      },
+    },
   },
   {
     timestamps: true,

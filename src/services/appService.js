@@ -3,6 +3,7 @@ const { getList, fetchFiltersList } = require('./utilService');
 const bcrypt = require('bcrypt');
 const User = require('../model/user');
 const Employee = require('../model/employee');
+const Role = require('../model/role');
 require('dotenv').config();
 
 const paginatedEmployeeList = (req) => {
@@ -56,14 +57,25 @@ const login = async (req, res) => {
     throw new Error('Invalid credentials');
   }
   const employee = await Employee.find({ email: user.email });
+  let roleType = '';
+  let permissions = [];
+  if (!(user?.role === 'admin')) {
+    roleType = 'employee';
+    const roles = await Role.find({});
+    const role = roles?.find((role) => role?.name === roleType);
+    permissions = role?.levelPermissions?.find(
+      (user) => user.level === employee?.[0]?.level
+    )?.permissions;
+  }
   return {
-    // 'name department designation email empId'
     _id: employee?.[0]?._id,
     name: user.name,
     department: user.department,
     designation: user.designation,
     email: user.email,
     empId: user.empId,
+    permissions,
+    role: user?.role ?? 'employee',
   };
 };
 

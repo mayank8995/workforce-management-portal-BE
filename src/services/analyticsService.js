@@ -84,8 +84,7 @@ const fetchEmployeesMeetingKPIs = async () => {
   return { employees };
 };
 
-const populateEmployeeAnalytics = async (req, res) => {
-  const type = req?.params?.type;
+const updateEmployeeAnalytics = async ({ type }) => {
   if (type === 'topPerformers') {
     const employeeIds = await Employees.find({
       rating: { $gte: 4.5 },
@@ -484,6 +483,7 @@ const getEmployeeMetric = async (metric, query) => {
       totalPages: Math.ceil(total / limit),
       hasNextPage: page * limit < total,
       hasPreviousPage: page > 1,
+      tableType: metric,
     },
   };
 };
@@ -652,6 +652,7 @@ const getPromotedEmployees = async (query) => {
       totalPages: Math.ceil(total / limit),
       hasNextPage: page * limit < total,
       hasPreviousPage: page > 1,
+      tableType: 'promotedThisYear',
     },
   };
 };
@@ -787,7 +788,7 @@ const getAnalytics = async () => {
   };
 };
 module.exports = {
-  populateEmployeeAnalytics,
+  updateEmployeeAnalytics,
   getEmployeeMetric,
   getPromotedEmployees,
   getAnalytics,

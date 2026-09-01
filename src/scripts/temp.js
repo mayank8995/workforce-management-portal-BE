@@ -17,15 +17,15 @@ const migrateEmpIds = async () => {
             level: 'junior',
             permissions: [
               {
-                resource: 'dashboardView',
+                resource: 'dashboard',
                 actions: ['read'],
               },
               {
-                resource: 'employeeView',
+                resource: 'employee',
                 actions: ['read'],
               },
               {
-                resource: 'analyticsView',
+                resource: 'analytics',
                 actions: ['read'],
               },
             ],
@@ -34,15 +34,15 @@ const migrateEmpIds = async () => {
             level: 'senior',
             permissions: [
               {
-                resource: 'dashboardView',
+                resource: 'dashboard',
                 actions: ['read', 'update'],
               },
               {
-                resource: 'employeeView',
+                resource: 'employee',
                 actions: ['read', 'update'],
               },
               {
-                resource: 'analyticsView',
+                resource: 'analytics',
                 actions: ['read'],
               },
             ],
@@ -51,15 +51,15 @@ const migrateEmpIds = async () => {
             level: 'lead',
             permissions: [
               {
-                resource: 'dashboardView',
+                resource: 'dashboard',
                 actions: ['read', 'update', 'create'],
               },
               {
-                resource: 'employeeView',
+                resource: 'employee',
                 actions: ['read', 'update'],
               },
               {
-                resource: 'analyticsView',
+                resource: 'analytics',
                 actions: ['read'],
               },
             ],
@@ -68,15 +68,15 @@ const migrateEmpIds = async () => {
             level: 'executive',
             permissions: [
               {
-                resource: 'dashboardView',
+                resource: 'dashboard',
                 actions: ['read', 'update', 'create'],
               },
               {
-                resource: 'employeeView',
+                resource: 'employee',
                 actions: ['read', 'update', 'create'],
               },
               {
-                resource: 'analyticsView',
+                resource: 'analytics',
                 actions: ['read'],
               },
             ],

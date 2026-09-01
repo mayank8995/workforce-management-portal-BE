@@ -14,3 +14,17 @@
 
 // backend db and schema revamp
 Employees
+
+{
+"resource": "dashboard",
+"actions": {
+"read": true,
+"update": true,
+"create": false,
+"delete": false
+}
+},
+store it in context
+
+1. access read flag in route to bloack user if he dont have read/view permission or hide the route path
+2. access update, create, delete flag in component to manage the actions / show hide the req ui.

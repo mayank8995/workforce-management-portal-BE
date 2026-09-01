@@ -75,6 +75,19 @@ const editEmployee = async (req, res) => {
   }
 };
 
+const deleteEmployee = async (req, res) => {
+  try {
+    const result = await service.deleteEmployee(req.query);
+    return res.status(200).json({
+      success: true,
+      data: result,
+      message: 'Deleted successfully !!',
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getEmployees,
   getEmployeeProfile,
@@ -82,4 +95,5 @@ module.exports = {
   createEmployee,
   editEmployee,
   editEmployeeProfile,
+  deleteEmployee,
 };
