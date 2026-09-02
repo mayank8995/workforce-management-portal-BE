@@ -33,7 +33,6 @@ const getEmployees = async (query) => {
   const sortField = ALLOWED_SORT_FIELDS[query.sortBy] || 'name';
 
   const sortOrder = query.sortOrder === 'desc' ? -1 : 1;
-  console.log('match>>', match);
 
   const result = await Employee.aggregate([
     {
@@ -180,11 +179,6 @@ const editEmployee = async (req) => {
     },
     { returnDocument: 'after' }
   );
-  // To do need to handle it better way, currently it is updating all the analytics data on every employee edit, need to update only the required analytics data based on the changes made in employee data.
-  await updateEmployeeAnalytics({ type: 'topPerformers' });
-  await updateEmployeeAnalytics({ type: 'meetingKPIs' });
-  await updateEmployeeAnalytics({ type: 'promotedThisYear' });
-  await updateEmployeeAnalytics({ type: 'requiringReview' });
   return {
     employee,
   };

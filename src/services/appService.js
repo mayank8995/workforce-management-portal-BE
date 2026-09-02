@@ -1,23 +1,23 @@
 const db = require('../config/database');
-const { getList, fetchFiltersList } = require('./utilService');
+const { fetchFiltersList } = require('./utilService');
 const bcrypt = require('bcrypt');
 const User = require('../model/user');
 const Employee = require('../model/employee');
 const Role = require('../model/role');
 require('dotenv').config();
 
-const paginatedEmployeeList = (req) => {
-  let response;
-  try {
-    response = getList(req);
-  } catch (error) {
-    throw error;
-  }
-  return {
-    success: true,
-    ...response,
-  };
-};
+// const paginatedEmployeeList = (req) => {
+//   let response;
+//   try {
+//     response = getList(req);
+//   } catch (error) {
+//     throw error;
+//   }
+//   return {
+//     success: true,
+//     ...response,
+//   };
+// };
 const fetchFilters = (req) => {
   const response = fetchFiltersList(req);
   return {
@@ -26,15 +26,15 @@ const fetchFilters = (req) => {
   };
 };
 
-const fetchEmployeeList = () => db.get('employeeList').value();
-const fetchAnalytics = () => db.get('analytics').value();
-const fetchPerformanceCards = () => db.get('performanceCards').value();
+// const fetchEmployeeList = () => db.get('employeeList').value();
+// const fetchAnalytics = () => db.get('analytics').value();
+// const fetchPerformanceCards = () => db.get('performanceCards').value();
 
-const fetchProfile = ({ id }) => {
-  const profileArray = db.get('profile');
-  const foundProfile = profileArray.find((profile) => profile.id === id);
-  return foundProfile;
-};
+// const fetchProfile = ({ id }) => {
+//   const profileArray = db.get('profile');
+//   const foundProfile = profileArray.find((profile) => profile.id === id);
+//   return foundProfile;
+// };
 
 const login = async (req, res) => {
   // extract
@@ -60,7 +60,11 @@ const login = async (req, res) => {
   let roleType = '';
   let permissions = [];
   if (!(user?.role === 'admin')) {
-    roleType = 'employee';
+    if (user?.role === 'guest') {
+      roleType = 'guest';
+    } else {
+      roleType = 'employee';
+    }
     const roles = await Role.find({});
     const role = roles?.find((role) => role?.name === roleType);
     permissions = role?.levelPermissions?.find(
@@ -107,44 +111,44 @@ const logout = async (req, res) => {
   }
 };
 
-const addProfile = ({
-  name,
-  phone,
-  email,
-  department,
-  designation,
-  empId,
-  jdate,
-  wmode,
-  location,
-  image,
-  id,
-}) => {
-  const newProfile = {
-    id,
-    name,
-    phone,
-    email,
-    department,
-    designation,
-    empId,
-    jdate,
-    wmode,
-    location,
-    image,
-  };
-  db.get('profile').push(newProfile).write();
-  return { message: 'Profile added successfully' };
-};
+// const addProfile = ({
+//   name,
+//   phone,
+//   email,
+//   department,
+//   designation,
+//   empId,
+//   jdate,
+//   wmode,
+//   location,
+//   image,
+//   id,
+// }) => {
+//   const newProfile = {
+//     id,
+//     name,
+//     phone,
+//     email,
+//     department,
+//     designation,
+//     empId,
+//     jdate,
+//     wmode,
+//     location,
+//     image,
+//   };
+//   db.get('profile').push(newProfile).write();
+//   return { message: 'Profile added successfully' };
+// };
 
-const editProfile = (payload) => {
-  const profileArray = db.get('profile');
-  const foundProfile = profileArray.find(
-    (profile) => profile.id === payload.id
-  );
-  foundProfile.assign(payload).write();
-  return { message: 'Profile edited successfully' };
-};
+// const editProfile = (payload) => {
+//   const profileArray = db.get('profile');
+//   const foundProfile = profileArray.find(
+//     (profile) => profile.id === payload.id
+//   );
+//   foundProfile.assign(payload).write();
+//   return { message: 'Profile edited successfully' };
+// };
 
 const signup = async ({ name, email, password, designation, department }) => {
   // check if user is already registered.
@@ -195,14 +199,9 @@ const seedEmployees = async () => {
 };
 
 module.exports = {
-  fetchEmployeeList,
-  paginatedEmployeeList,
-  fetchAnalytics,
-  fetchPerformanceCards,
-  fetchProfile,
   login,
-  addProfile,
-  editProfile,
+  // addProfile,
+  // editProfile,
   signup,
   fetchFilters,
   fetchEmployeeDetails,

@@ -4,13 +4,13 @@ const { commonFields } = require('../utils/constants');
 const commonSchema = new mongoose.Schema(
   {
     ...commonFields,
-    employees: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employee',
-        required: true,
-      },
-    ],
+    // employees: [
+    //   {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'Employee',
+    //     required: true,
+    //   },
+    // ],
   },
   {
     timestamps: true,

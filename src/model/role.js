@@ -26,7 +26,7 @@ const levelPermissionsSchema = new mongoose.Schema(
       trim: true,
       required: true,
       unique: true,
-      enum: ['junior', 'senior', 'lead', 'executive'],
+      enum: ['junior', 'senior', 'lead', 'executive', 'guest'],
     },
     permissions: [
       {
@@ -43,7 +43,7 @@ const roleSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
-      enum: ['admin', 'employee'],
+      enum: ['admin', 'employee', 'guest'],
     },
     levelPermissions: [
       {

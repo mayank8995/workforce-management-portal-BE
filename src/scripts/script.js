@@ -141,7 +141,6 @@ async function run() {
           },
         ],
       });
-      console.log('employee>>>', employee);
       if (!employee) {
         continue;
       }
@@ -153,7 +152,6 @@ async function run() {
         promotedOn: new Date(promotion.promotedOn),
       });
     }
-    console.log(promotionDocuments);
     await EmployeePromotion.insertMany(promotionDocuments);
   } finally {
     await mongoose.disconnect();

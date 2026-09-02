@@ -10,6 +10,8 @@ const authorizePermissions = (resource, action) => {
     if (user?.role === 'admin') {
       next();
       return;
+    } else if (user?.role === 'guest') {
+      roleType = 'guest';
     } else {
       roleType = 'employee';
     }

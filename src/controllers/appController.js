@@ -1,5 +1,5 @@
 const service = require('../services/appService');
-const db = require('../config/database');
+// const db = require('../config/database');
 const employeeForm = require('../config/employeeFormConfig');
 const { validateSignupData } = require('../utils/validation');
 const getEmployees = (req, res) => {
@@ -73,44 +73,44 @@ const login = async (req, res) => {
   }
 };
 
-const refreshToken = (req, res) => {
-  try {
-    const cookies = req.cookies;
-    if (!cookies?.jwt) {
-      throw new Error('Forbidden');
-    }
-    const refreshToken = cookies.jwt;
-    const user = db.get('users').find({ refreshToken: refreshToken }).value();
+// const refreshToken = (req, res) => {
+//   try {
+//     const cookies = req.cookies;
+//     if (!cookies?.jwt) {
+//       throw new Error('Forbidden');
+//     }
+//     const refreshToken = cookies.jwt;
+//     const user = db.get('users').find({ refreshToken: refreshToken }).value();
 
-    if (!user) {
-      throw new Error('Unauthorized');
-    }
-    jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET,
-      (err, decoded) => {
-        if (err || user.email !== decoded.email) {
-          throw new Error('Unauthorized');
-        }
-        const accessToken = jwt.sign(
-          {
-            email: decoded.email,
-          },
-          process.env.ACCESS_TOKEN_SECRET,
-          { expiresIn: '30m' }
-        );
-        res.status(200).json({ token: accessToken });
-      }
-    );
-    // const response = service.handleRefreshToken(req);
-    // console.log('response?.accessToken???>>>', response?.accessToken);
-    // const updatedResponse = {
-    //   token: response?.accessToken,
-    // };
-  } catch (error) {
-    res.status(401).json({ success: false, message: error.message });
-  }
-};
+//     if (!user) {
+//       throw new Error('Unauthorized');
+//     }
+//     jwt.verify(
+//       refreshToken,
+//       process.env.REFRESH_TOKEN_SECRET,
+//       (err, decoded) => {
+//         if (err || user.email !== decoded.email) {
+//           throw new Error('Unauthorized');
+//         }
+//         const accessToken = jwt.sign(
+//           {
+//             email: decoded.email,
+//           },
+//           process.env.ACCESS_TOKEN_SECRET,
+//           { expiresIn: '30m' }
+//         );
+//         res.status(200).json({ token: accessToken });
+//       }
+//     );
+//     // const response = service.handleRefreshToken(req);
+//     // console.log('response?.accessToken???>>>', response?.accessToken);
+//     // const updatedResponse = {
+//     //   token: response?.accessToken,
+//     // };
+//   } catch (error) {
+//     res.status(401).json({ success: false, message: error.message });
+//   }
+// };
 
 const logout = async (req, res) => {
   try {
@@ -190,7 +190,7 @@ module.exports = {
   signup,
   getFilters,
   getEmployeeDetails,
-  refreshToken,
+  // refreshToken,
   logout,
   checkServerHealth,
   fetchEmployeeFormConfig,
