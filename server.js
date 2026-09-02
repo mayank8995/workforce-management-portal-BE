@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(cookieParser());
 const authRouter = require('./src/routes/auth');
 const employeeRouter = require('./src/routes/employee');
-const profileRouter = require('./src/routes/profile');
+// const profileRouter = require('./src/routes/profile');
 const healthCheckRouter = require('./src/routes/health');
 const corsOptions = require('./src/config/cors');
 const analyticsRouter = require('./src/routes/analytics');

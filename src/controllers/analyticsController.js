@@ -46,7 +46,6 @@ const getAnalytics = async (req, res) => {
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
-    c;
   }
 };
 
@@ -60,11 +59,7 @@ const getFilters = async (req, res) => {
       message: 'Fetched successfully !!',
     });
   } catch (error) {
-    return res.status(200).json({
-      success: true,
-      data: result,
-      message: 'Fetched successfully !!',
-    });
+    return res.status(400).json({ success: false, message: error.message });
   }
 };
 

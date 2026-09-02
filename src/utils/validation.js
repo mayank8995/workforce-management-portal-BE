@@ -37,7 +37,6 @@ const validateCreateEmployeeData = (req) => {
   return isAllowed;
 };
 const validateEditEmployeeData = (req) => {
-  console.log(req.body);
   const isAllowed = Object.keys(req.body).every((k) =>
     ALLOWED_EDITABLE_FIELDS.includes(k)
   );

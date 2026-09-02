@@ -1,5 +1,4 @@
 const EmployeeAnalytics = require('../model/employeeAnalytics');
-const Employees = require('../model/employee');
 const {
   EMPLOYEE_SAFE_DATA,
   REVIEW_REASON,
@@ -84,90 +83,6 @@ const fetchEmployeesMeetingKPIs = async () => {
   return { employees };
 };
 
-const updateEmployeeAnalytics = async ({ type }) => {
-  if (type === 'topPerformers') {
-    const employeeIds = await Employees.find({
-      rating: { $gte: 4.5 },
-    }).distinct('_id');
-    const totalEmployeesCount = await Employees.countDocuments();
-    const percentage = Number(
-      (employeeIds.length / totalEmployeesCount) * 100
-    ).toFixed(2);
-    const analytics = await EmployeeAnalytics.updateOne(
-      {},
-      {
-        $set: {
-          'topPerformers.count': employeeIds.length,
-          'topPerformers.employees': employeeIds,
-          'topPerformers.percentage': percentage,
-        },
-      }
-    );
-    return { analytics };
-  } else if (type === 'promotedThisYear') {
-    const promotedEmployeeIds = await EmployeePromotion.distinct('_id');
-    const totalEmployeesCount = await Employees.countDocuments();
-    const percentage = Number(
-      (promotedEmployeeIds.length / totalEmployeesCount) * 100
-    ).toFixed(2);
-    const analytics = await EmployeeAnalytics.updateOne(
-      {},
-      {
-        $set: {
-          'promotedThisYear.count': promotedEmployeeIds.length,
-          'promotedThisYear.employees': promotedEmployeeIds,
-          'promotedThisYear.percentage': percentage,
-        },
-      }
-    );
-    return { analytics };
-  } else if (type === 'meetingKPIs') {
-    const employeeIds = await Employees.find({
-      $and: [{ rating: { $gte: 4 } }, { attendancePercentage: { $gte: 90 } }],
-    }).distinct('_id');
-    const totalEmployeesCount = await Employees.countDocuments();
-    const percentage = Number(
-      (employeeIds.length / totalEmployeesCount) * 100
-    ).toFixed(2);
-    const analytics = await EmployeeAnalytics.updateOne(
-      {},
-      {
-        $set: {
-          'meetingKPIs.count': employeeIds.length,
-          'meetingKPIs.employees': employeeIds,
-          'meetingKPIs.percentage': percentage,
-        },
-      }
-    );
-    return { analytics };
-  } else if (type === 'requiringReview') {
-    const employeeIds = await Employees.find({
-      $or: [
-        {
-          $and: [{ rating: { $lt: 4 } }, { attendancePercentage: { $lt: 88 } }],
-        },
-        { onNoticePeriod: true },
-      ],
-    }).distinct('_id');
-    const totalEmployeesCount = await Employees.countDocuments();
-    const percentage = Number(
-      (employeeIds.length / totalEmployeesCount) * 100
-    ).toFixed(2);
-    const analytics = await EmployeeAnalytics.updateOne(
-      {},
-      {
-        $set: {
-          'requiringReview.count': employeeIds.length,
-          'requiringReview.employees': employeeIds,
-          'requiringReview.percentage': percentage,
-        },
-      }
-    );
-    return { analytics };
-  } else {
-    throw new Error('Analytics type not present');
-  }
-};
 const fetchFilters = async (req, res) => {
   try {
     const { tableType: type } = req?.query;
@@ -243,53 +158,219 @@ const getEmployeeMetric = async (metric, query) => {
   const sortField = ALLOWED_SORT_FIELDS[query.sortBy] || 'name';
   const sortOrder = query.sortOrder === 'desc' ? -1 : 1;
 
-  const metricPath = `$${metric}`;
+  // const metricPath = `$${metric}`;
+  let metaData = [];
+  const pipeline = [];
 
-  const pipeline = [
-    {
-      $lookup: {
-        from: 'employees',
-        localField: `${metric}.employees`,
-        foreignField: '_id',
-        as: 'employee',
-      },
-    },
-
-    {
-      $unwind: '$employee',
-    },
-
-    {
-      $set: {
-        _id: '$employee._id',
-        name: '$employee.name',
-        email: '$employee.email',
-        empId: '$employee.empId',
-        department: '$employee.department',
-        designation: '$employee.designation',
-        phone: '$employee.phone',
-        manager: '$employee.manager',
-        joiningDate: '$employee.joiningDate',
-        yearsOfExperience: '$employee.yearsOfExperience',
-        salary: '$employee.salary',
-        location: '$employee.location',
-        workMode: '$employee.workMode',
-        projects: '$employee.projects',
-        skills: '$employee.skills',
-        rating: '$employee.rating',
-        attendancePercentage: '$employee.attendancePercentage',
-        employeeSatisfaction: '$employee.employeeSatisfaction',
-        onNoticePeriod: '$employee.onNoticePeriod',
-      },
-    },
-
+  let matchArray = [
     {
       $match: match,
     },
   ];
 
-  if (metric === 'requiringReview') {
-    pipeline.push({
+  if (metric === 'topPerformers') {
+    metaData = [
+      {
+        $group: {
+          _id: null,
+          totalEmployeesCount: { $sum: 1 },
+          count: {
+            $sum: { $cond: [{ $gte: ['$rating', 4.5] }, 1, 0] },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          title: `Top Performers`,
+          icon: ``,
+          description: `Employees with a rating of 4.5 or higher.`,
+          trend: `up`,
+          trendValue: { $literal: 3.2 },
+          count: 1,
+          percentage: {
+            $round: [
+              {
+                $multiply: [
+                  { $divide: ['$count', '$totalEmployeesCount'] },
+                  100,
+                ],
+              },
+              2,
+            ],
+          },
+        },
+      },
+    ];
+  } else if (metric === 'meetingKPIs') {
+    metaData = [
+      {
+        $group: {
+          _id: null,
+          totalEmployeesCount: { $sum: 1 },
+          count: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $gte: ['$rating', 4] },
+                    { $gte: ['$attendancePercentage', 90] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          exceeding: {
+            $sum: {
+              $cond: [{ $gte: ['$rating', 4.5] }, 1, 0],
+            },
+          },
+
+          meeting: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [{ $gte: ['$rating', 4] }, { $lt: ['$rating', 4.5] }],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+
+          notMeeting: {
+            $sum: {
+              $cond: [{ $lt: ['$rating', 4] }, 1, 0],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          title: `Meeting KPIs`,
+          icon: ``,
+          description: `Employees with rating ≥ 4.0 and attendance ≥ 90%`,
+          trend: `up`,
+          trendValue: { $literal: 5.4 },
+          count: 1,
+          percentage: {
+            $round: [
+              {
+                $multiply: [
+                  { $divide: ['$count', '$totalEmployeesCount'] },
+                  100,
+                ],
+              },
+              2,
+            ],
+          },
+          breakdown: {
+            exceeding: {
+              label: 'Exceeding KPIs',
+              count: '$exceeding',
+              percentage: {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ['$exceeding', '$totalEmployeesCount'] },
+                      100,
+                    ],
+                  },
+                  2,
+                ],
+              },
+              ratingRange: '≥ 4.5',
+            },
+            meeting: {
+              label: 'Meeting KPIs',
+              count: '$meeting',
+              percentage: {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ['$meeting', '$totalEmployeesCount'] },
+                      100,
+                    ],
+                  },
+                  2,
+                ],
+              },
+              ratingRange: '4.0 – 4.4',
+            },
+            notMeeting: {
+              label: 'Not Meeting KPIs',
+              count: '$notMeeting',
+              percentage: {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ['$notMeeting', '$totalEmployeesCount'] },
+                      100,
+                    ],
+                  },
+                  2,
+                ],
+              },
+              ratingRange: '< 4.0',
+            },
+          },
+        },
+      },
+    ];
+  } else if (metric === 'requiringReview') {
+    metaData = [
+      {
+        $group: {
+          _id: null,
+          totalEmployeesCount: { $sum: 1 },
+          count: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    {
+                      $and: [
+                        { $lt: ['$rating', 4] },
+                        { $lt: ['$attendancePercentage', 88] },
+                      ],
+                    },
+                    { $eq: ['$onNoticePeriod', true] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          title: `Requiring Review`,
+          icon: ``,
+          description: `Employees with rating < 4.0 or attendance < 88% or on notice period`,
+          trend: `down`,
+          trendValue: { $literal: 1.8 },
+          count: 1,
+          percentage: {
+            $round: [
+              {
+                $multiply: [
+                  { $divide: ['$count', '$totalEmployeesCount'] },
+                  100,
+                ],
+              },
+              2,
+            ],
+          },
+        },
+      },
+    ];
+    matchArray.push({
       $set: {
         reviewReason: {
           $filter: {
@@ -317,7 +398,9 @@ const getEmployeeMetric = async (metric, query) => {
   }
   pipeline.push({
     $facet: {
+      metaData: metaData,
       data: [
+        ...matchArray,
         {
           $sort: {
             [sortField]: sortOrder,
@@ -337,143 +420,32 @@ const getEmployeeMetric = async (metric, query) => {
           },
         },
       ],
-
       total: [
+        {
+          $match: match,
+        },
         {
           $count: 'count',
         },
       ],
-
-      meta: [
-        {
-          $limit: 1,
-        },
-        {
-          $project: {
-            _id: 0,
-            title: `${metricPath}.title`,
-            icon: `${metricPath}.icon`,
-            percentage: `${metricPath}.percentage`,
-            trend: `${metricPath}.trend`,
-            trendValue: `${metricPath}.trendValue`,
-            description: `${metricPath}.description`,
-          },
-        },
-      ],
     },
   });
 
-  pipeline.push({
-    $project: {
-      data: 1,
-      title: { $arrayElemAt: ['$meta.title', 0] },
-      icon: { $arrayElemAt: ['$meta.icon', 0] },
-      count: {
-        $ifNull: [{ $arrayElemAt: ['$total.count', 0] }, 0],
-      },
-      percentage: { $arrayElemAt: ['$meta.percentage', 0] },
-      trend: { $arrayElemAt: ['$meta.trend', 0] },
-      trendValue: { $arrayElemAt: ['$meta.trendValue', 0] },
-      description: { $arrayElemAt: ['$meta.description', 0] },
-    },
-  });
+  const [result] = await Employee.aggregate(pipeline);
+  const total = result?.total?.[0]?.count || 0;
 
-  const [result] = await EmployeeAnalytics.aggregate(pipeline);
-
-  const total = result?.count || 0;
-  let meetingBreakdown;
-  if (metric === 'meetingKPIs') {
-    const [breakdown] = await Employee.aggregate([
-      {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          exceeding: {
-            $sum: {
-              $cond: [{ $gte: ['$rating', 4.5] }, 1, 0],
-            },
-          },
-
-          meeting: {
-            $sum: {
-              $cond: [
-                {
-                  $and: [{ $gte: ['$rating', 4] }, { $lt: ['$rating', 4.5] }],
-                },
-                1,
-                0,
-              ],
-            },
-          },
-
-          notMeeting: {
-            $sum: {
-              $cond: [{ $lt: ['$rating', 4] }, 1, 0],
-            },
-          },
-        },
-      },
-
-      {
-        $project: {
-          _id: 0,
-          exceeding: {
-            label: 'Exceeding KPIs',
-            count: '$exceeding',
-            percentage: {
-              $round: [
-                {
-                  $multiply: [{ $divide: ['$exceeding', '$total'] }, 100],
-                },
-                2,
-              ],
-            },
-            ratingRange: '≥ 4.5',
-          },
-
-          meeting: {
-            label: 'Meeting KPIs',
-            count: '$meeting',
-            percentage: {
-              $round: [
-                {
-                  $multiply: [{ $divide: ['$meeting', '$total'] }, 100],
-                },
-                2,
-              ],
-            },
-            ratingRange: '4.0 – 4.4',
-          },
-
-          notMeeting: {
-            label: 'Not Meeting KPIs',
-            count: '$notMeeting',
-            percentage: {
-              $round: [
-                {
-                  $multiply: [{ $divide: ['$notMeeting', '$total'] }, 100],
-                },
-                2,
-              ],
-            },
-            ratingRange: '< 4.0',
-          },
-        },
-      },
-    ]);
-    meetingBreakdown = breakdown;
-  }
+  const meta = { ...result?.metaData[0] };
   return {
-    breakdown: meetingBreakdown,
+    breakdown: meta?.breakdown,
     metric,
     employees: result?.data || [],
-    title: result?.title,
-    icon: result?.icon,
-    count: result?.count || 0,
-    percentage: result?.percentage,
-    trend: result?.trend,
-    trendValue: result?.trendValue,
-    description: result?.description,
+    title: meta?.title,
+    icon: meta?.icon,
+    count: total,
+    percentage: meta?.percentage,
+    trend: meta?.trend,
+    trendValue: meta?.trendValue,
+    description: meta?.description,
     pagination: {
       page,
       limit,
@@ -503,12 +475,55 @@ const getPromotedEmployees = async (query) => {
   const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
 
   const promotionMatch = METRIC_CONFIG.promotedThisYear.match;
-  console.log('employeeFilters>>>', employeeFilters);
+  let metaData = [
+    {
+      $group: {
+        _id: null,
+        totalEmployeesCount: { $sum: 1 },
+        count: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  {
+                    $gte: ['$promotedOn', new Date('2024-01-01T00:00:00.000Z')],
+                  },
+                  {
+                    $lt: ['$promotedOn', new Date('2026-09-01T00:00:00.000Z')],
+                  },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        title: `Promoted`,
+        icon: ``,
+        description: `Promoted between Jan 2024 – August 2026`,
+        trend: `up`,
+        trendValue: { $literal: 2.1 },
+        count: 1,
+        percentage: {
+          $round: [
+            {
+              $multiply: [{ $divide: ['$count', '$totalEmployeesCount'] }, 100],
+            },
+            2,
+          ],
+        },
+      },
+    },
+  ];
   const pipeline = [
     {
       $match: promotionMatch,
     },
-
     {
       $lookup: {
         from: 'employees',
@@ -517,11 +532,9 @@ const getPromotedEmployees = async (query) => {
         as: 'employee',
       },
     },
-
     {
       $unwind: '$employee',
     },
-
     {
       $match: employeeFilters,
     },
@@ -535,6 +548,7 @@ const getPromotedEmployees = async (query) => {
 
   pipeline.push({
     $facet: {
+      metaData: metaData,
       data: [
         {
           $sort: {
@@ -602,7 +616,6 @@ const getPromotedEmployees = async (query) => {
           },
         },
       ],
-
       total: [
         {
           $count: 'count',
@@ -615,22 +628,7 @@ const getPromotedEmployees = async (query) => {
 
   const total = result?.total?.[0]?.count || 0;
 
-  // Get metadata from EmployeeAnalytics
-  const analytics = await EmployeeAnalytics.findOne(
-    {},
-    {
-      'promotedThisYear.title': 1,
-      'promotedThisYear.icon': 1,
-      'promotedThisYear.count': 1,
-      'promotedThisYear.percentage': 1,
-      'promotedThisYear.trend': 1,
-      'promotedThisYear.trendValue': 1,
-      'promotedThisYear.description': 1,
-    }
-  ).lean();
-
-  const promotedThisYear = analytics?.promotedThisYear;
-
+  const promotedThisYear = { ...result?.metaData[0] };
   return {
     metric: 'promotedThisYear',
 
@@ -718,14 +716,12 @@ const getAnalytics = async () => {
         projectStatusDistribution: [
           { $unwind: '$projects' },
           {
-            // Step 1: Count occurrences of each unique value
             $group: {
-              _id: '$projects.status', // Group by the value of the 'status' field
+              _id: '$projects.status',
               count: { $sum: 1 },
             },
           },
           {
-            // Step 2: Format into a key-value pair array [{ k: "active", v: 5 }]
             $group: {
               _id: null,
               counts: {
@@ -737,7 +733,6 @@ const getAnalytics = async () => {
             },
           },
           {
-            // Step 3: Convert the array of pairs into a single object root
             $replaceRoot: {
               newRoot: { $arrayToObject: '$counts' },
             },
@@ -788,7 +783,6 @@ const getAnalytics = async () => {
   };
 };
 module.exports = {
-  updateEmployeeAnalytics,
   getEmployeeMetric,
   getPromotedEmployees,
   getAnalytics,
