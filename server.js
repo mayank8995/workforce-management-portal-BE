@@ -20,7 +20,7 @@ app.use('/', employeeRouter);
 app.use('/', analyticsRouter);
 // app.use('/', profileRouter);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3500;
 
 connectDB()
   .then(() => {
