@@ -6,12 +6,9 @@ const {
   ALLOWED_EMPLOYEE_PROFILE_FIELDS,
 } = require('../config/employee.querybuilding');
 const Employee = require('../model/employee');
+const EmployeePromotion = require('../model/employeePromotion');
 const User = require('../model/user');
-const {
-  validateCreateEmployeeData,
-  validateEditEmployeeData,
-} = require('../utils/validation');
-const { updateEmployeeAnalytics } = require('./analyticsService');
+const { validateCreateEmployeeData } = require('../utils/validation');
 const getEmployees = async (query) => {
   const page = Math.max(Number(query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(query.limit) || 10, 1), 100);
@@ -141,6 +138,11 @@ const createEmployee = async (req) => {
     data,
   };
 };
+const promoteEmployees = async (req) => {
+  const requests = req.body;
+  const results = await EmployeePromotion.insertMany(requests);
+  return { results };
+};
 const editEmployee = async (req) => {
   const { _id } = req?.query || {};
   const {
@@ -199,4 +201,5 @@ module.exports = {
   editEmployee,
   editEmployeeProfile,
   deleteEmployee,
+  promoteEmployees,
 };

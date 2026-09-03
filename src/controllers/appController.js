@@ -1,75 +1,23 @@
 const service = require('../services/appService');
-// const db = require('../config/database');
-const employeeForm = require('../config/employeeFormConfig');
 const { validateSignupData } = require('../utils/validation');
-const getEmployees = (req, res) => {
-  try {
-    const response = service.fetchEmployeeList();
-    res.status(200).json(response);
-  } catch (error) {
-    res
-      .status(400)
-      .json({ success: false, message: 'Error is fetching Employee list' });
-  }
-};
-const getPaginatedEmployees = (req, res) => {
-  try {
-    const response = service.paginatedEmployeeList(req);
-    res.status(200).json(response);
-    // res.status(500).json({});
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-const getFilters = (req, res) => {
-  try {
-    const response = service.fetchFilters(req);
-    // console.log('in final response>>', response);
-    res.status(200).json(response);
-  } catch (error) {
-    res.status(400).json({ success: false, message: 'Error in filters' });
-  }
-};
-const getAnalytics = (req, res) => {
-  try {
-    const response = service.fetchAnalytics();
-    res.status(200).json(response);
-  } catch (error) {
-    res
-      .status(400)
-      .json({ success: false, message: 'Error in fetching Analytics' });
-  }
-};
-const getPerformanceCards = (req, res) => {
-  try {
-    const response = service.fetchPerformanceCards();
-    res.status(200).json(response);
-  } catch (error) {
-    res
-      .status(400)
-      .json({ success: false, message: 'Error in fetching performance cards' });
-  }
-};
-const getProfile = (req, res) => {
-  try {
-    const response = service.fetchProfile(req.query);
-    res.status(200).json(response);
-  } catch (error) {
-    res
-      .status(400)
-      .json({ success: false, message: 'Error in fetching user profile' });
-  }
-};
+const logger = require('../logger/logger');
+
 const login = async (req, res) => {
   try {
     const response = await service.login(req, res);
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'User Logged in',
       data: response,
     });
-  } catch (error) {
-    res.status(401).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(401).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 
@@ -115,84 +63,71 @@ const login = async (req, res) => {
 const logout = async (req, res) => {
   try {
     const response = await service.logout(req, res);
-    res.status(200).json(response);
-  } catch (error) {
-    res.status(401).json({ success: false, message: error.message });
+    return res.status(200).json(response);
+  } catch (err) {
+    res.status(401).json({ success: false, message: err.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
-const addProfile = (req, res) => {
-  try {
-    const response = service.addProfile(req.body);
-    res.status(201).json(response);
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-const editProfile = (req, res) => {
-  try {
-    const response = service.editProfile(req.body);
-    res.status(201).json(response);
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
+
 const signup = async (req, res) => {
   try {
     validateSignupData(req);
     const response = await service.signup(req.body);
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'User added successfully',
       data: response,
     });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 
 const getEmployeeDetails = (req, res) => {
   try {
     const response = service.fetchEmployeeDetails(req);
-    res.status(200).json(response);
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    return res.status(200).json(response);
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 const checkServerHealth = (req, res) => {
-  res.status(200).json({ status: 'ok' });
-};
-
-const fetchEmployeeFormConfig = (req, res) => {
   try {
-    res.status(200).json(employeeForm);
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-const seedEmployees = async (req, res) => {
-  try {
-    const response = await service.seedEmployees();
-    res.status(200).json(response);
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    return res.status(200).json({ status: 'ok' });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 
 module.exports = {
-  getEmployees,
-  getPaginatedEmployees,
-  getAnalytics,
-  getPerformanceCards,
-  getProfile,
   login,
-  addProfile,
-  editProfile,
   signup,
-  getFilters,
   getEmployeeDetails,
   // refreshToken,
   logout,
   checkServerHealth,
-  fetchEmployeeFormConfig,
-  seedEmployees,
 };

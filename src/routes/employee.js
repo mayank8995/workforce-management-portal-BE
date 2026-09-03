@@ -25,6 +25,7 @@ employeeRouter.get(
 employeeRouter.patch(
   '/employee/edit/profile',
   verifyJWT,
+  authorizePermissions('employee', 'update'),
   employeesController.editEmployeeProfile
 );
 employeeRouter.get(

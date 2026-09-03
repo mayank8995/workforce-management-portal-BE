@@ -1,4 +1,5 @@
 const service = require('../services/employeeService');
+const logger = require('../logger/logger');
 
 const getEmployees = async (req, res) => {
   try {
@@ -8,8 +9,14 @@ const getEmployees = async (req, res) => {
       data: result,
       message: 'Fetched successfully !!',
     });
-  } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 
@@ -21,8 +28,14 @@ const getEmployeeDetails = async (req, res) => {
       data: result,
       message: 'Fetched successfully !!',
     });
-  } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 
@@ -34,8 +47,14 @@ const getEmployeeProfile = async (req, res) => {
       data: result,
       message: 'Fetched successfully !!',
     });
-  } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 const editEmployeeProfile = async (req, res) => {
@@ -45,8 +64,14 @@ const editEmployeeProfile = async (req, res) => {
       success: result,
       message: 'Updated successfully !!',
     });
-  } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 
@@ -58,8 +83,14 @@ const createEmployee = async (req, res) => {
       data: result,
       message: 'Created successfully !!',
     });
-  } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 const editEmployee = async (req, res) => {
@@ -70,8 +101,14 @@ const editEmployee = async (req, res) => {
       data: result,
       message: 'Edited successfully !!',
     });
-  } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 
@@ -83,8 +120,14 @@ const deleteEmployee = async (req, res) => {
       data: result,
       message: 'Deleted successfully !!',
     });
-  } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 

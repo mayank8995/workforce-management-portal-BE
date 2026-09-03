@@ -26,16 +26,6 @@ const fetchFilters = (req) => {
   };
 };
 
-// const fetchEmployeeList = () => db.get('employeeList').value();
-// const fetchAnalytics = () => db.get('analytics').value();
-// const fetchPerformanceCards = () => db.get('performanceCards').value();
-
-// const fetchProfile = ({ id }) => {
-//   const profileArray = db.get('profile');
-//   const foundProfile = profileArray.find((profile) => profile.id === id);
-//   return foundProfile;
-// };
-
 const login = async (req, res) => {
   // extract
   const { email, password } = req.body;
@@ -84,21 +74,6 @@ const login = async (req, res) => {
 };
 
 const logout = async (req, res) => {
-  // const cookies = req.cookies;
-  // const refreshToken = cookies.jwt;
-  // const user = db.get('users').find({ refreshToken: refreshToken }).value();
-  // if (!user) {
-  //   res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
-  // }
-  // // delete refresh token from db;
-  // if (user) {
-  //   delete user.refreshToken;
-  //   await db.write();
-  // }
-  // res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
-  // return {
-  //   success: true,
-  // };
   try {
     res.cookie('token', null, {
       expires: new Date(Date.now()),
@@ -110,45 +85,6 @@ const logout = async (req, res) => {
     throw new Error(error);
   }
 };
-
-// const addProfile = ({
-//   name,
-//   phone,
-//   email,
-//   department,
-//   designation,
-//   empId,
-//   jdate,
-//   wmode,
-//   location,
-//   image,
-//   id,
-// }) => {
-//   const newProfile = {
-//     id,
-//     name,
-//     phone,
-//     email,
-//     department,
-//     designation,
-//     empId,
-//     jdate,
-//     wmode,
-//     location,
-//     image,
-//   };
-//   db.get('profile').push(newProfile).write();
-//   return { message: 'Profile added successfully' };
-// };
-
-// const editProfile = (payload) => {
-//   const profileArray = db.get('profile');
-//   const foundProfile = profileArray.find(
-//     (profile) => profile.id === payload.id
-//   );
-//   foundProfile.assign(payload).write();
-//   return { message: 'Profile edited successfully' };
-// };
 
 const signup = async ({ name, email, password, designation, department }) => {
   // check if user is already registered.
@@ -181,30 +117,10 @@ const fetchEmployeeDetails = (req) => {
   return employee;
 };
 
-const seedEmployees = async () => {
-  try {
-    const employeeData = require('../../dummy.json');
-    const employees = employeeData.employeeList[0].employees;
-    await Employee.deleteMany({});
-
-    const createdUsers = await Employee.insertMany(employees);
-
-    return {
-      message: 'Employees seeded successfully',
-      count: createdUsers.length,
-    };
-  } catch (error) {
-    throw new Error(error);
-  }
-};
-
 module.exports = {
   login,
-  // addProfile,
-  // editProfile,
   signup,
   fetchFilters,
   fetchEmployeeDetails,
   logout,
-  seedEmployees,
 };
