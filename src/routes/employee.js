@@ -52,5 +52,11 @@ employeeRouter.delete(
   authorizePermissions('employee', 'delete'),
   employeesController.deleteEmployee
 );
+employeeRouter.delete(
+  '/employees/promote',
+  verifyJWT,
+  authorizePermissions('employee', 'update'),
+  employeesController.promoteEmployees
+);
 
 module.exports = employeeRouter;

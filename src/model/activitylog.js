@@ -1,5 +1,14 @@
 const mongoose = require('mongoose');
-
+const activityErrorSchema = new mongoose.Schema({
+  message: {
+    type: String,
+    required: true,
+  },
+  stack: {
+    type: String,
+    required: true,
+  },
+});
 const activitylogSchema = new mongoose.Schema(
   {
     adminId: {
@@ -36,6 +45,9 @@ const activitylogSchema = new mongoose.Schema(
     },
     timestamp: {
       type: String,
+    },
+    error: {
+      type: activityErrorSchema,
     },
   },
   { timestamps: true }

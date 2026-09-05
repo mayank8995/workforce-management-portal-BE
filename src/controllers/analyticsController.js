@@ -1,5 +1,6 @@
 const service = require('../services/analyticsService');
 const logger = require('../logger/logger');
+// const fakeService = require('../services/fakeServiceForTestingFrequestDataSentUsingWebsocket');
 
 const getMetricEmployees = async (req, res) => {
   try {
@@ -82,8 +83,16 @@ const getFilters = async (req, res) => {
   }
 };
 
+// const fakeDataService = async (req, res) => {
+//   try {
+//     await fakeService.fakeDataService(req, res);
+//   } catch (err) {
+//     res.status(400).json({ success: false, message: err?.message });
+//   }
+// };
 module.exports = {
   getMetricEmployees,
   getAnalytics,
   getFilters,
+  // fakeDataService,
 };

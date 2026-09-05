@@ -190,6 +190,12 @@ const attritionInsights = {
     },
   ],
 };
+const EMPLOYEE_CREATED = 'employeeCreated';
+const EMPLOYEE_EDITED = 'employeeEdited';
+const EMPLOYEE_DELETED = 'employeeDeleted';
+const ADMIN_LOGIN = 'adminLogin';
+const ADMIN_LOGOUT = 'adminLogour';
+
 module.exports = {
   PROJECT_STATUS,
   RISK_STATUS,
@@ -204,4 +210,9 @@ module.exports = {
   skillsInDemand,
   attritionInsights,
   ALLOWED_EDITS_USER_PROFILE,
+  EMPLOYEE_CREATED,
+  EMPLOYEE_EDITED,
+  EMPLOYEE_DELETED,
+  ADMIN_LOGIN,
+  ADMIN_LOGOUT,
 };

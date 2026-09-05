@@ -2,6 +2,7 @@ const express = require('express');
 const connectDB = require('./src/config/database');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+require('./src/events/activityLog.listener');
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
@@ -29,5 +30,5 @@ connectDB()
     });
   })
   .catch((err) => {
-    logger.alert('Database Connection failed!', err);
+    logger.error('Database Connection failed!', err);
   });

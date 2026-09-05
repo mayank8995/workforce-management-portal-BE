@@ -5,10 +5,10 @@ const requestLogger = async (req, res, next) => {
   res.on('finish', () => {
     const duration = `${Date.now() - start}ms`;
     logger.info('API Request', {
-      method: req.method,
-      url: req.originalUrl,
-      status: res.statusCode,
       duration,
+      url: req.originalUrl,
+      method: req.method,
+      status: res.statusCode,
       ip: req.ip,
       isRequestLog: true,
     });

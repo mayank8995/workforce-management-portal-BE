@@ -114,11 +114,30 @@ const editEmployee = async (req, res) => {
 
 const deleteEmployee = async (req, res) => {
   try {
-    const result = await service.deleteEmployee(req.query);
+    const result = await service.deleteEmployee(req);
     return res.status(200).json({
       success: true,
       data: result,
       message: 'Deleted successfully !!',
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
+  }
+};
+
+const promoteEmployees = async (req, res) => {
+  try {
+    const result = await service.promoteEmployees(req);
+    return res.status(200).json({
+      success: true,
+      data: result,
+      message: 'Employees promoted successfully!!',
     });
   } catch (err) {
     res.status(400).json({ success: false, message: err?.message });
@@ -139,4 +158,5 @@ module.exports = {
   editEmployee,
   editEmployeeProfile,
   deleteEmployee,
+  promoteEmployees,
 };
