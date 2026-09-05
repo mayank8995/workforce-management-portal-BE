@@ -1,10 +1,12 @@
 const Employee = require('../model/employee');
+const logger = require('../logger/logger');
+
 const authorizePermissions = (resource, action) => {
   return async (req, res, next) => {
     const user = req?.user;
     const employee = await Employee.findOne({ email: user.email });
     if (!employee) {
-      throw new Error('Employee not found');
+      throw new Error(`Employee not found::${user}`);
     }
     let roleType = '';
     if (user?.role === 'admin') {
@@ -25,6 +27,12 @@ const authorizePermissions = (resource, action) => {
       );
     });
     if (!isAllowed) {
+      logger.error({
+        message: 'Insufficient permissions',
+        method: req?.method,
+        url: req?.originalUrl,
+        stack: '',
+      });
       return res
         .status(401)
         .json({ success: false, message: 'Insufficient permissions' });

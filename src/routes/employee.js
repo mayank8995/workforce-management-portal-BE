@@ -25,6 +25,7 @@ employeeRouter.get(
 employeeRouter.patch(
   '/employee/edit/profile',
   verifyJWT,
+  authorizePermissions('employee', 'update'),
   employeesController.editEmployeeProfile
 );
 employeeRouter.get(
@@ -50,6 +51,12 @@ employeeRouter.delete(
   verifyJWT,
   authorizePermissions('employee', 'delete'),
   employeesController.deleteEmployee
+);
+employeeRouter.delete(
+  '/employees/promote',
+  verifyJWT,
+  authorizePermissions('employee', 'update'),
+  employeesController.promoteEmployees
 );
 
 module.exports = employeeRouter;

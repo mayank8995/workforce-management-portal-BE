@@ -1,4 +1,6 @@
 const service = require('../services/analyticsService');
+const logger = require('../logger/logger');
+// const fakeService = require('../services/fakeServiceForTestingFrequestDataSentUsingWebsocket');
 
 const getMetricEmployees = async (req, res) => {
   try {
@@ -31,8 +33,14 @@ const getMetricEmployees = async (req, res) => {
       data: result,
       message: 'Fetched successfully !!',
     });
-  } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 
@@ -44,8 +52,14 @@ const getAnalytics = async (req, res) => {
       data: result,
       message: 'Fetched successfully !!',
     });
-  } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 
@@ -58,13 +72,27 @@ const getFilters = async (req, res) => {
       data: result,
       message: 'Fetched successfully !!',
     });
-  } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err?.message });
+    logger.error({
+      message: err?.message,
+      method: req?.method,
+      url: req?.originalUrl,
+      stack: err?.stack,
+    });
   }
 };
 
+// const fakeDataService = async (req, res) => {
+//   try {
+//     await fakeService.fakeDataService(req, res);
+//   } catch (err) {
+//     res.status(400).json({ success: false, message: err?.message });
+//   }
+// };
 module.exports = {
   getMetricEmployees,
   getAnalytics,
   getFilters,
+  // fakeDataService,
 };
