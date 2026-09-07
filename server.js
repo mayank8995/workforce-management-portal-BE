@@ -11,6 +11,7 @@ const employeeRouter = require('./src/routes/employee');
 const healthCheckRouter = require('./src/routes/health');
 const corsOptions = require('./src/config/cors');
 const analyticsRouter = require('./src/routes/analytics');
+const aiRouter = require('./src/routes/ai');
 const logger = require('./src/logger/logger');
 const requestLogger = require('./src/middleware/requestLogger');
 app.use(cors(corsOptions));
@@ -19,6 +20,7 @@ app.use('/', healthCheckRouter);
 app.use('/', authRouter);
 app.use('/', employeeRouter);
 app.use('/', analyticsRouter);
+app.use('/', aiRouter);
 
 const PORT = process.env.PORT || 3500;
 
