@@ -44,7 +44,6 @@ const logger = createLogger({
       level: 'error',
       format: combine(excludeRequests(), timestamp(), json()),
     }),
-
     new transports.File({
       filename: path.join(__dirname, '../../logs/requests.log'),
       level: 'info',

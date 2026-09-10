@@ -4,14 +4,14 @@ const logger = require('../logger/logger');
 const summarize = async (req, res) => {
   try {
     const result = await service.summarize(req, res);
-    return res.status(result?.status || 200).json({
+    return res.status(200).json({
       success: true,
       data: result,
       message: 'Fetched successfully !!',
     });
   } catch (err) {
     res
-      .status(result?.status || 400)
+      .status(err?.status || 400)
       .json({ success: false, message: err?.message });
     logger.error({
       message: err?.message,
