@@ -46,7 +46,6 @@ const login = async (req, res) => {
   } else {
     throw new Error('Invalid credentials');
   }
-  const employee = await Employee.find({ email: user.email });
   let roleType = '';
   let permissions = [];
   if (!(user?.role === 'admin')) {
@@ -55,20 +54,22 @@ const login = async (req, res) => {
     } else {
       roleType = 'employee';
     }
-    const roles = await Role.find({});
-    const role = roles?.find((role) => role?.name === roleType);
-    permissions = role?.levelPermissions?.find(
-      (user) => user.level === employee?.[0]?.level
-    )?.permissions;
   }
+  const [employee, role] = await Promise.all([
+    Employee.findOne({ email: user.email }),
+    roleType ? Role.findOne({ name: roleType }) : null,
+  ]);
+  permissions =
+    role?.levelPermissions?.find((user) => user.level === employee?.level)
+      ?.permissions || [];
   return {
-    _id: employee?.[0]?._id,
+    _id: employee?._id,
     name: user.name,
     department: user.department,
     designation: user.designation,
     email: user.email,
     empId: user.empId,
-    permissions,
+    permissions: permissions,
     role: user?.role ?? 'employee',
   };
 };
