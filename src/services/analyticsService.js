@@ -22,6 +22,7 @@ const {
 const Employee = require('../model/employee');
 const Client = require('../model/client');
 const { extract } = require('./utilService');
+const AppError = require('../utils/AppError');
 
 const fetchTopPerformers = async () => {
   const employees = await EmployeeAnalytics.findOne(
@@ -109,7 +110,7 @@ const fetchFilters = async (req, res) => {
       data = employees;
       filterKeys = filterableFields;
     } else {
-      throw new Error('Analytics type not present');
+      throw new AppError('Analytics type not present', 404);
     }
     const valuesMap = new Map();
 
@@ -124,7 +125,7 @@ const fetchFilters = async (req, res) => {
     };
     return response;
   } catch (error) {
-    throw new Error(error);
+    throw new AppError(error);
   }
 };
 //
@@ -132,11 +133,11 @@ const getEmployeeMetric = async (metric, query) => {
   const config = METRIC_CONFIG[metric];
 
   if (!config) {
-    throw new Error('Invalid analytics metric');
+    throw new AppError('Invalid analytics metric', 400);
   }
 
   if (config.source !== 'employee') {
-    throw new Error('This metric requires the promotion query');
+    throw new AppError('This metric requires the promotion query', 400);
   }
 
   const page = Math.max(Number(query.page) || 1, 1);

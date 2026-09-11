@@ -1,9 +1,10 @@
-const db = require('../config/database');
+// const db = require('../config/database');
 const { fetchFiltersList } = require('./utilService');
 const bcrypt = require('bcrypt');
 const User = require('../model/user');
 const Employee = require('../model/employee');
 const Role = require('../model/role');
+const AppError = require('../utils/AppError');
 require('dotenv').config();
 
 // const paginatedEmployeeList = (req) => {
@@ -32,7 +33,7 @@ const login = async (req, res) => {
   // check if user is already registered.
   const user = await User.findOne({ email: email });
   if (!user) {
-    throw new Error('Invalid credentials');
+    throw new AppError('Invalid credentials', 401);
   }
   const isPasswordValid = await user.validatePassword(password);
   if (isPasswordValid) {
@@ -44,7 +45,7 @@ const login = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
   } else {
-    throw new Error('Invalid credentials');
+    throw new AppError('Invalid credentials', 401);
   }
   let roleType = '';
   let permissions = [];
@@ -83,7 +84,7 @@ const logout = async (req, res) => {
       success: true,
     };
   } catch (error) {
-    throw new Error(error);
+    throw new AppError(error);
   }
 };
 
@@ -91,7 +92,7 @@ const signup = async ({ name, email, password, designation, department }) => {
   // check if user is already registered.
   const isUserRegistered = await User.findOne({ email: email });
   if (isUserRegistered) {
-    throw new Error('User already registerd');
+    throw new AppError('User already registerd', 409);
   }
   //encrypt the password
   const hashedPwd = await bcrypt.hash(password, 10);
@@ -109,19 +110,19 @@ const signup = async ({ name, email, password, designation, department }) => {
   };
 };
 
-const fetchEmployeeDetails = (req) => {
-  const { id } = req.query;
-  const employee = db
-    .get('employeeList')
-    .value()
-    .employeeList[0].employees.find((emp) => emp.id === Number(id));
-  return employee;
-};
+// const fetchEmployeeDetails = (req) => {
+//   const { id } = req.query;
+//   const employee = db
+//     .get('employeeList')
+//     .value()
+//     .employeeList[0].employees.find((emp) => emp.id === Number(id));
+//   return employee;
+// };
 
 module.exports = {
   login,
   signup,
   fetchFilters,
-  fetchEmployeeDetails,
+  // fetchEmployeeDetails,
   logout,
 };

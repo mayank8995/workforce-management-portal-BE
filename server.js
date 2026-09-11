@@ -14,6 +14,8 @@ const analyticsRouter = require('./src/routes/analytics');
 const aiRouter = require('./src/routes/ai');
 const logger = require('./src/logger/logger');
 const requestLogger = require('./src/middleware/requestLogger');
+const { loadRoles } = require('./src/utils/roleCache');
+const { errorHandler } = require('./src/middleware/error');
 app.use(cors(corsOptions));
 app.use(requestLogger);
 app.use('/', healthCheckRouter);
@@ -21,16 +23,20 @@ app.use('/', authRouter);
 app.use('/', employeeRouter);
 app.use('/', analyticsRouter);
 app.use('/', aiRouter);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3500;
 
 connectDB()
-  .then(() => {
+  .then(async () => {
     logger.info('Database connected successfully...');
+    await loadRoles();
+    logger.info('Roles cached');
     app.listen(PORT, () => {
       logger.info(`server is running on port ${PORT}`);
     });
   })
   .catch((err) => {
     logger.error('Database Connection failed!', err);
+    process.exit(1);
   });

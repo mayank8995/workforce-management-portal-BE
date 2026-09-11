@@ -3,6 +3,7 @@ const validator = require('validator');
 const { DEPARTMENTS } = require('../utils/constants');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const AppError = require('../utils/AppError');
 require('dotenv').config();
 
 const userSchema = new mongoose.Schema(
@@ -16,8 +17,9 @@ const userSchema = new mongoose.Schema(
       validate(value) {
         // Allows letters, spaces, apostrophes and hyphens
         if (!validator.isAlpha(value, 'en-US', { ignore: ' -' })) {
-          throw new Error(
-            'Name can contain only letters, spaces, apostrophes and hyphens'
+          throw new AppError(
+            'Name can contain only letters, spaces, apostrophes and hyphens',
+            422
           );
         }
       },
@@ -31,7 +33,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       validate(value) {
         if (!validator.isEmail(value)) {
-          throw new Error('Please provide a valid email address');
+          throw new AppError('Please provide a valid email address', 422);
         }
       },
     },
@@ -41,7 +43,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       validate(value) {
         if (!validator.isAlphanumeric(value, 'en-US', { ignore: '/' })) {
-          throw new Error('Please provide a valid employee Id');
+          throw new AppError('Please provide a valid employee Id', 422);
         }
       },
     },
@@ -50,8 +52,9 @@ const userSchema = new mongoose.Schema(
       required: true,
       validate(value) {
         if (!validator.isStrongPassword(value)) {
-          throw new Error(
-            'Your password is not strong. Enter a strong password!'
+          throw new AppError(
+            'Your password is not strong. Enter a strong password!',
+            422
           );
         }
       },

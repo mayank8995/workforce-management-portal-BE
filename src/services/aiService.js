@@ -5,23 +5,21 @@ const {
 } = require('../config/ai_system_prompt_about_project.js');
 const { aiConfig } = require('../config/ai.js');
 const logger = require('../logger/logger.js');
+const AppError = require('../utils/AppError.js');
 const summarize = async (req, res) => {
   const requestId = randomUUID();
-  // console.log('reqDSFSDFSDFSD', req.body);
 
   try {
     const { text, history = [] } = req.body ?? {};
-    // console.log('DSFSDFSDFSD', text, history);
     const trimmed = text?.trim();
     if (
       typeof trimmed !== 'string' ||
       trimmed.length < 2 ||
       trimmed.length > 200
     ) {
-      throw new Error({ error: 'text must be 2-200 characters', status: 400 });
+      throw new AppError('text must be 2-200 characters', 422);
     }
-    if (!Array.isArray(history))
-      throw new Error({ success: false, message: 'bad history', status: 400 });
+    if (!Array.isArray(history)) throw new AppError('bad history', 400);
 
     const cleanHistory = history
       ?.filter(
@@ -61,9 +59,9 @@ const summarize = async (req, res) => {
     return { summary: answer, requestId };
   } catch (err) {
     if (err instanceof AIUnavailableError) {
-      throw new Error({ error: 'AI unavailable', status: 502 });
+      throw new AppError('Chat unavailable', 502);
     }
-    throw new Error({ error: 'summarization failed', requestId, status: 503 });
+    throw new AppError('summarization failed', 503);
   }
 };
 

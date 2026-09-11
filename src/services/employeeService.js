@@ -15,6 +15,7 @@ const {
   EMPLOYEE_EDITED,
   EMPLOYEE_DELETED,
 } = require('../utils/constants');
+const AppError = require('../utils/AppError');
 const getEmployees = async (query) => {
   const page = Math.max(Number(query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(query.limit) || 10, 1), 100);
@@ -118,7 +119,7 @@ const editEmployeeProfile = async (req) => {
 const getEmployeeDetails = async (query) => {
   const { _id } = query;
   if (!_id) {
-    throw new Error('Employee ID is required');
+    throw new AppError('Employee ID is required', 400);
   }
   const result = await Employee.findById(_id)
     .select('-_id -createdAt -updatedAt -__v')
@@ -134,7 +135,7 @@ const getEmployeeDetails = async (query) => {
 const createEmployee = async (req) => {
   const isAllowed = validateCreateEmployeeData(req);
   if (!isAllowed) {
-    throw new Error('Invalid Employee data');
+    throw new AppError('Invalid Employee data', 400);
   }
   const employee = await Employee({
     ...(req?.body || {}),

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const AppError = require('../utils/AppError');
 const employeePromotionSchema = new mongoose.Schema(
   {
     employeeId: {
@@ -28,7 +29,7 @@ const employeePromotionSchema = new mongoose.Schema(
       required: true,
       validate(value) {
         if (value > new Date()) {
-          throw new Error('Promotion date cannot be in the future');
+          throw new AppError('Promotion date cannot be in the future', 422);
         }
       },
     },
