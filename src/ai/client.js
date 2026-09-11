@@ -1,5 +1,6 @@
 const { aiConfig } = require('../config/ai.js');
 const logger = require('../logger/logger.js');
+const AppError = require('../utils/AppError.js');
 class AIUnavailableError extends Error {}
 
 async function callOllama({ system, user }) {
@@ -13,7 +14,7 @@ async function callOllama({ system, user }) {
       messages: [{ role: 'system', content: system }, ...user],
     }),
   });
-  if (!res.ok) throw new Error(`ollama responded ${res.status}`);
+  if (!res.ok) throw new AppError(`ollama responded ${res.status}`, res.statu);
   const d = await res.json();
   return {
     text: d.message.content,
@@ -38,7 +39,8 @@ async function callAnthropic({ system, messages }) {
       messages,
     }),
   });
-  if (!res.ok) throw new Error(`anthropic responded ${res.status}`);
+  if (!res.ok)
+    throw new AppError(`anthropic responded ${res.status}`, res.status);
   const d = await res.json();
   return {
     text: d.content

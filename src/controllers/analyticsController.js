@@ -1,87 +1,54 @@
 const service = require('../services/analyticsService');
-const logger = require('../logger/logger');
+const AppError = require('../utils/AppError');
+const { asyncHandler } = require('../utils/asyncHandler');
 // const fakeService = require('../services/fakeServiceForTestingFrequestDataSentUsingWebsocket');
 
-const getMetricEmployees = async (req, res) => {
-  try {
-    const { metric } = req.params;
+const getMetricEmployees = asyncHandler(async (req, res) => {
+  const { metric } = req.params;
 
-    const allowedMetrics = [
-      'topPerformers',
-      'meetingKPIs',
-      'promotedThisYear',
-      'requiringReview',
-    ];
+  const allowedMetrics = [
+    'topPerformers',
+    'meetingKPIs',
+    'promotedThisYear',
+    'requiringReview',
+  ];
 
-    if (!allowedMetrics.includes(metric)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid analytics metric',
-      });
-    }
-
-    let result;
-
-    if (metric === 'promotedThisYear') {
-      result = await service.getPromotedEmployees(req.query);
-    } else {
-      result = await service.getEmployeeMetric(metric, req.query);
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: result,
-      message: 'Fetched successfully !!',
-    });
-  } catch (err) {
-    res.status(400).json({ success: false, message: err?.message });
-    logger.error({
-      message: err?.message,
-      method: req?.method,
-      url: req?.originalUrl,
-      stack: err?.stack,
-    });
+  if (!allowedMetrics.includes(metric)) {
+    throw new AppError('Invalid analytics metric', 400);
   }
-};
 
-const getAnalytics = async (req, res) => {
-  try {
-    const result = await service.getAnalytics(req);
-    return res.status(200).json({
-      success: true,
-      data: result,
-      message: 'Fetched successfully !!',
-    });
-  } catch (err) {
-    res.status(400).json({ success: false, message: err?.message });
-    logger.error({
-      message: err?.message,
-      method: req?.method,
-      url: req?.originalUrl,
-      stack: err?.stack,
-    });
+  let result;
+
+  if (metric === 'promotedThisYear') {
+    result = await service.getPromotedEmployees(req.query);
+  } else {
+    result = await service.getEmployeeMetric(metric, req.query);
   }
-};
 
-const getFilters = async (req, res) => {
-  try {
-    const result = await service.fetchFilters(req);
+  return res.status(200).json({
+    success: true,
+    data: result,
+    message: 'Fetched successfully !!',
+  });
+});
 
-    return res.status(200).json({
-      success: true,
-      data: result,
-      message: 'Fetched successfully !!',
-    });
-  } catch (err) {
-    res.status(400).json({ success: false, message: err?.message });
-    logger.error({
-      message: err?.message,
-      method: req?.method,
-      url: req?.originalUrl,
-      stack: err?.stack,
-    });
-  }
-};
+const getAnalytics = asyncHandler(async (req, res) => {
+  const result = await service.getAnalytics(req);
+  return res.status(200).json({
+    success: true,
+    data: result,
+    message: 'Fetched successfully !!',
+  });
+});
+
+const getFilters = asyncHandler(async (req, res) => {
+  const result = await service.fetchFilters(req);
+  return res.status(200).json({
+    success: true,
+    data: result,
+    message: 'Fetched successfully !!',
+  });
+});
 
 // const fakeDataService = async (req, res) => {
 //   try {

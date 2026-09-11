@@ -7,6 +7,7 @@ const {
   WORKMODE,
   EMPLOYEE_SATISFACTION,
 } = require('../utils/constants');
+const AppError = require('../utils/AppError');
 const projectSchema = new mongoose.Schema({
   projectName: {
     type: String,
@@ -16,7 +17,10 @@ const projectSchema = new mongoose.Schema({
     maxLength: 100,
     validate(value) {
       if (!validator.isLength(value, { min: 2, max: 100 })) {
-        throw new Error('Project name must be between 2 and 100 characters');
+        throw new AppError(
+          'Project name must be between 2 and 100 characters',
+          422
+        );
       }
     },
   },
@@ -46,7 +50,7 @@ const projectSchema = new mongoose.Schema({
     max: 10,
     validate(value) {
       if (!Number.isInteger(value)) {
-        throw new Error('Priority ranking must be an integer');
+        throw new AppError('Priority ranking must be an integer', 422);
       }
     },
   },
@@ -69,8 +73,9 @@ const employeeSchema = new mongoose.Schema(
       validate(value) {
         // Allows letters, spaces, apostrophes and hyphens
         if (!validator.isAlpha(value, 'en-US', { ignore: " '-" })) {
-          throw new Error(
-            'Name can contain only letters, spaces, apostrophes and hyphens'
+          throw new AppError(
+            'Name can contain only letters, spaces, apostrophes and hyphens',
+            422
           );
         }
       },
@@ -84,7 +89,7 @@ const employeeSchema = new mongoose.Schema(
       trim: true,
       validate(value) {
         if (!validator.isEmail(value)) {
-          throw new Error('Please provide a valid email address');
+          throw new AppError('Please provide a valid email address', 422);
         }
       },
     },
@@ -103,7 +108,7 @@ const employeeSchema = new mongoose.Schema(
           !validator.isMobilePhone(value, 'any') &&
           !/^\+\d{1,3}-\d{3}-\d{6,10}$/.test(value)
         ) {
-          throw new Error('Invalid phone number format');
+          throw new AppError('Invalid phone number format', 422);
         }
       },
     },
@@ -139,7 +144,7 @@ const employeeSchema = new mongoose.Schema(
       required: true,
       validate(value) {
         if (value > new Date()) {
-          throw new Error('Joining date cannot be in the future');
+          throw new AppError('Joining date cannot be in the future', 422);
         }
       },
     },
@@ -151,7 +156,7 @@ const employeeSchema = new mongoose.Schema(
       max: 60,
       validate(value) {
         if (typeof value !== 'number') {
-          throw new Error('Years of experience must be a number');
+          throw new AppError('Years of experience must be a number', 422);
         }
       },
     },
@@ -162,7 +167,7 @@ const employeeSchema = new mongoose.Schema(
       min: 0,
       validate(value) {
         if (!Number.isFinite(value)) {
-          throw new Error('Salary must be a valid number');
+          throw new AppError('Salary must be a valid number', 422);
         }
       },
     },

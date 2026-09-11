@@ -1,3 +1,5 @@
+const AppError = require('../utils/AppError');
+
 require('dotenv').config();
 const aiConfig = {
   enabled: process.env.AI_ENABLED === 'true',
@@ -10,6 +12,6 @@ const aiConfig = {
 };
 
 if (aiConfig.enabled && aiConfig.provider === 'anthropic' && !aiConfig.apiKey) {
-  throw new Error('AI_PROVIDER=anthropic requires ANTHROPIC_API_KEY');
+  throw new AppError('AI_PROVIDER=anthropic requires ANTHROPIC_API_KEY', 400);
 }
 module.exports = { aiConfig };

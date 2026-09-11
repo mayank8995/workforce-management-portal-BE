@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const AppError = require('../utils/AppError');
 
 const clientSchema = new mongoose.Schema(
   {
@@ -48,8 +49,9 @@ const clientSchema = new mongoose.Schema(
       required: true,
       validate(value) {
         if (value <= this.contractStartDate) {
-          throw new Error(
-            'Contract end date must be after contract start date'
+          throw new AppError(
+            'Contract end date must be after contract start date',
+            422
           );
         }
       },
