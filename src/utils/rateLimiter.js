@@ -7,7 +7,7 @@ const globalLimiter = rateLimit({
   ...base,
   windowMs: 15 * 60 * 1000,
   limit: 300,
-  message: { error: 'Too many requests. Please slow down.' },
+  message: { message: 'Too many requests. Please slow down.', success: false },
 });
 
 const authLimiter = rateLimit({
@@ -15,14 +15,17 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 8,
   skipSuccessfulRequests: true,
-  message: { error: 'Too many attempts. Try again in 15 minutes.' },
+  message: {
+    message: 'Too many attempts. Try again in 15 minutes.',
+    success: false,
+  },
 });
 
 const aiRateLimiter = rateLimit({
   ...base,
   windowMs: 60_000,
   limit: 10,
-  message: { error: 'Too many requests. Please slow down.' },
+  message: { message: 'Too many requests. Please slow down.', success: false },
 });
 
 module.exports = { globalLimiter, aiRateLimiter, authLimiter };

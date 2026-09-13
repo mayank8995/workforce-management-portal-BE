@@ -30,7 +30,7 @@ app.use(requestLogger);
 
 app.use('/', healthCheckRouter);
 
-app.use(['/login', '/logout', '/signup'], authLimiter);
+app.use(['/guest', '/login', '/logout', '/signup'], authLimiter);
 app.use('/ai', aiRateLimiter);
 app.use(globalLimiter);
 

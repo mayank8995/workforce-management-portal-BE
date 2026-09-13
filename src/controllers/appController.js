@@ -1,7 +1,14 @@
 const service = require('../services/appService');
 const { validateSignupData } = require('../utils/validation');
 const { asyncHandler } = require('../utils/asyncHandler');
-
+const guest = asyncHandler(async (req, res) => {
+  const response = await service.guest(req, res);
+  return res.status(200).json({
+    success: true,
+    message: 'User Logged in',
+    data: response,
+  });
+});
 const login = asyncHandler(async (req, res) => {
   const response = await service.login(req, res);
   return res.status(200).json({
@@ -41,4 +48,5 @@ module.exports = {
   // refreshToken,
   logout,
   checkServerHealth,
+  guest,
 };
