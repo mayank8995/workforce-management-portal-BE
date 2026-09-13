@@ -3,9 +3,7 @@ const connectDB = require('./src/config/database');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('./src/events/activityLog.listener');
-const app = express();
-app.use(express.json());
-app.use(cookieParser());
+
 const authRouter = require('./src/routes/auth');
 const employeeRouter = require('./src/routes/employee');
 const healthCheckRouter = require('./src/routes/health');
@@ -21,18 +19,26 @@ const {
   aiRateLimiter,
   authLimiter,
 } = require('./src/utils/rateLimiter');
+
+const app = express();
+
+app.set('trust proxy', 1);
 app.use(cors(corsOptions));
+app.use(express.json());
+app.use(cookieParser());
 app.use(requestLogger);
-// app.use('/', healthCheckRouter);
-// app.use('/', authLimiter, authRouter);
-// app.use('/', globalLimiter, employeeRouter);
-// app.use('/', globalLimiter, analyticsRouter);
-// app.use('/', aiRateLimiter, aiRouter);
+
 app.use('/', healthCheckRouter);
+
+app.use(['/login', '/logout', '/signup'], authLimiter);
+app.use('/ai', aiRateLimiter);
+app.use(globalLimiter);
+
 app.use('/', authRouter);
 app.use('/', employeeRouter);
 app.use('/', analyticsRouter);
 app.use('/', aiRouter);
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3500;
