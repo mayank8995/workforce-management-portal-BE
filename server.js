@@ -16,13 +16,18 @@ const logger = require('./src/logger/logger');
 const requestLogger = require('./src/middleware/requestLogger');
 const { loadRoles } = require('./src/utils/roleCache');
 const { errorHandler } = require('./src/middleware/error');
+const {
+  globalLimiter,
+  aiRateLimiter,
+  authLimiter,
+} = require('./src/utils/rateLimiter');
 app.use(cors(corsOptions));
 app.use(requestLogger);
 app.use('/', healthCheckRouter);
-app.use('/', authRouter);
-app.use('/', employeeRouter);
-app.use('/', analyticsRouter);
-app.use('/', aiRouter);
+app.use('/', authLimiter, authRouter);
+app.use('/', globalLimiter, employeeRouter);
+app.use('/', globalLimiter, analyticsRouter);
+app.use('/', aiRateLimiter, aiRouter);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3500;
