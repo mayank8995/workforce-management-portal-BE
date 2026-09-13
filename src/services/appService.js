@@ -7,23 +7,60 @@ const Role = require('../model/role');
 const AppError = require('../utils/AppError');
 require('dotenv').config();
 
-// const paginatedEmployeeList = (req) => {
-//   let response;
-//   try {
-//     response = getList(req);
-//   } catch (error) {
-//     throw error;
-//   }
-//   return {
-//     success: true,
-//     ...response,
-//   };
-// };
 const fetchFilters = (req) => {
   const response = fetchFiltersList(req);
   return {
     success: true,
     ...response,
+  };
+};
+
+const guest = async (req, res) => {
+  // extract
+  // check if user is already registered.
+  const user = await User.findOne({ email: process.env.GUEST_EMAIL });
+  if (!user) {
+    throw new AppError('Invalid credentials', 401);
+  }
+  const isPasswordValid = await user.validatePassword(
+    process.env.GUEST_PASSWORD
+  );
+  if (isPasswordValid) {
+    const { token } = await user.getJWT();
+    res.cookie('token', token, {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: true,
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+  } else {
+    throw new AppError('Invalid credentials', 401);
+  }
+  let roleType = '';
+  let permissions = [];
+  if (!(user?.role === 'admin')) {
+    if (user?.role === 'guest') {
+      roleType = 'guest';
+    } else {
+      roleType = 'employee';
+    }
+  }
+  const [employee, role] = await Promise.all([
+    Employee.findOne({ email: user.email }),
+    roleType ? Role.findOne({ name: roleType }) : null,
+  ]);
+  permissions =
+    role?.levelPermissions?.find((user) => user.level === employee?.level)
+      ?.permissions || [];
+  return {
+    _id: employee?._id,
+    name: user.name,
+    department: user.department,
+    designation: user.designation,
+    email: user.email,
+    empId: user.empId,
+    permissions: permissions,
+    role: user?.role ?? 'employee',
   };
 };
 
@@ -125,4 +162,5 @@ module.exports = {
   fetchFilters,
   // fetchEmployeeDetails,
   logout,
+  guest,
 };
