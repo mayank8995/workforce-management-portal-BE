@@ -14,8 +14,8 @@ const summarize = async (req, res) => {
     const trimmed = text?.trim();
     if (
       typeof trimmed !== 'string' ||
-      trimmed.length < 2 ||
-      trimmed.length > 200
+      trimmed?.length < 2 ||
+      trimmed?.length > 200
     ) {
       throw new AppError('text must be 2-200 characters', 422);
     }
@@ -32,14 +32,13 @@ const summarize = async (req, res) => {
         role: m?.role,
         content:
           m?.role === 'user'
-            ? `<user_message>\n${m?.content.slice(0, 200)}\n</user_message>`
-            : m?.content.slice(0, 1200),
+            ? `<user_message>\n${m?.content?.slice(0, 200)}\n</user_message>`
+            : m?.content?.slice(0, 1200),
       }));
     const messages = [
       ...cleanHistory,
       { role: 'user', content: `<user_message>\n${trimmed}\n</user_message>` },
     ];
-    // console.log('messages>>>', messages);
     const answer = await complete({
       requestId,
       system: system_prompt,
