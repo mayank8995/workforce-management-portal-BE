@@ -23,32 +23,72 @@ async function callOllama({ system, user }) {
   };
 }
 
-async function callAnthropic({ system, messages }) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+// async function callAnthropic({ system, messages }) {
+//   const res = await fetch('https://api.anthropic.com/v1/messages', {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'x-api-key': aiConfig.apiKey,
+//       'anthropic-version': '2023-06-01',
+//     },
+//     signal: AbortSignal.timeout(aiConfig.timeoutMs),
+//     body: JSON.stringify({
+//       model: aiConfig.model,
+//       max_tokens: aiConfig.maxOutputTokens,
+//       system,
+//       messages,
+//     }),
+//   });
+//   if (!res.ok)
+//     throw new AppError(`anthropic responded ${res.status}`, res.status);
+//   const d = await res.json();
+//   return {
+//     text: d.content
+//       .filter((b) => b.type === 'text')
+//       .map((b) => b.text)
+//       .join('\n'),
+//     in: d.usage.input_tokens,
+//     out: d.usage.output_tokens,
+//   };
+// }
+async function callOpenAI({ system, user }) {
+  const res = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': aiConfig.apiKey,
-      'anthropic-version': '2023-06-01',
+      Authorization: `Bearer ${aiConfig.apiKey}`,
     },
     signal: AbortSignal.timeout(aiConfig.timeoutMs),
     body: JSON.stringify({
       model: aiConfig.model,
-      max_tokens: aiConfig.maxOutputTokens,
-      system,
-      messages,
+      instructions: system,
+      input: user,
+      max_output_tokens: aiConfig.maxOutputTokens,
     }),
   });
-  if (!res.ok)
-    throw new AppError(`anthropic responded ${res.status}`, res.status);
-  const d = await res.json();
+  const body = await res.text();
+
+  if (!res.ok) {
+    console.error('OpenAI ERROR:', {
+      status: res.status,
+      body,
+    });
+
+    throw new AppError(`OpenAI responded ${res.status}: ${body}`, res.status);
+  }
+  const d = JSON.parse(body);
+  const text = (d.output ?? [])
+    .filter((o) => o.type === 'message')
+    .flatMap((o) => o.content ?? [])
+    .filter((c) => c.type === 'output_text')
+    .map((c) => c.text)
+    .join('\n');
+
   return {
-    text: d.content
-      .filter((b) => b.type === 'text')
-      .map((b) => b.text)
-      .join('\n'),
-    in: d.usage.input_tokens,
-    out: d.usage.output_tokens,
+    text,
+    in: d?.usage?.input_tokens ?? 0,
+    out: d?.usage?.output_tokens ?? 0,
+    cached: d?.usage?.input_tokens_details?.cached_tokens ?? 0,
   };
 }
 async function complete({ system, user, requestId }) {
@@ -57,8 +97,8 @@ async function complete({ system, user, requestId }) {
   const started = Date.now();
   try {
     const r =
-      aiConfig.provider === 'anthropic'
-        ? await callAnthropic({ system, user })
+      aiConfig.provider === 'openAI'
+        ? await callOpenAI({ system, user })
         : await callOllama({ system, user });
 
     logger.info('llm.call', {
