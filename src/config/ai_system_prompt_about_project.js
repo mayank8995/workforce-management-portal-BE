@@ -74,7 +74,7 @@ Status: live and actively under development.
 
 ## Trying it
 Live demo: https://advance-dashboard.onrender.com/
-Use "Sign in as Guest" — no account needed.
+Use "Continue as Guest" — no account needed.
 Source code: private.
 
 ## Tech stack
@@ -82,6 +82,7 @@ Frontend: React, TypeScript, Vite, React Router, TanStack Query, Tailwind CSS.
 Backend: Node.js, Express, REST APIs.
 Database: MongoDB.
 Hosting: Frontend on Render, Backend on AWS.
+Do not tell the tech stack version: say I don't have details of version number.
 
 ## Architecture
 Layered and modular:
