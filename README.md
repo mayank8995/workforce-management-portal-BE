@@ -9,7 +9,6 @@ The project focuses on building an workforce management dashboard similar to app
 * **Express.js**
 * **REST APIs**
 * **mongodb**
-* 
 ## 👨‍💻 Author
 **Mayank Gupta**
 ---
