@@ -15,7 +15,7 @@ const fetchFilters = (req) => {
   };
 };
 
-const guest = async (req, res) => {
+const guest = async (_req, res) => {
   // extract
   // check if user is already registered.
   const user = await User.findOne({ email: process.env.GUEST_EMAIL });

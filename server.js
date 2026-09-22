@@ -19,6 +19,7 @@ const {
   aiRateLimiter,
   authLimiter,
 } = require('./src/utils/rateLimiter');
+const uploadRouter = require('./src/routes/upload');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/', authRouter);
 app.use('/', employeeRouter);
 app.use('/', analyticsRouter);
 app.use('/', aiRouter);
+app.use('/', uploadRouter);
 
 app.use(errorHandler);
 
