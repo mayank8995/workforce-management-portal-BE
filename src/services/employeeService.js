@@ -4,9 +4,9 @@ const {
   ALLOWED_SORT_FIELDS,
   EMPLOYEE_PROJECTION,
   ALLOWED_EMPLOYEE_PROFILE_FIELDS,
+  NON_GUEST_EMPLOYEES,
 } = require('../config/employee.querybuilding');
 const Employee = require('../model/employee');
-const EmployeePromotion = require('../model/employeePromotion');
 const User = require('../model/user');
 const { validateCreateEmployeeData } = require('../utils/validation');
 const eventEmitter = require('../events/eventemitters');
@@ -16,6 +16,7 @@ const {
   EMPLOYEE_DELETED,
 } = require('../utils/constants');
 const AppError = require('../utils/AppError');
+const { runInTransaction } = require('../utils/transaction');
 const getEmployees = async (query) => {
   const page = Math.max(Number(query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(query.limit) || 10, 1), 100);
@@ -27,6 +28,7 @@ const getEmployees = async (query) => {
   const search = buildSearch(query.search);
 
   const match = {
+    ...NON_GUEST_EMPLOYEES,
     ...filters,
   };
 
@@ -107,12 +109,10 @@ const getEmployeeProfile = async (query) => {
 
 const editEmployeeProfile = async (req) => {
   const { name, phone, email } = req.body;
-  await User.findOneAndUpdate({ email }, { name });
-  await Employee.findOneAndUpdate(
-    { email },
-    { name, phone },
-    { returnDocument: true }
-  );
+  await runInTransaction(async (session) => {
+    await User.findOneAndUpdate({ email }, { name }, { session });
+    await Employee.findOneAndUpdate({ email }, { name, phone }, { session });
+  });
   return true;
 };
 
@@ -150,18 +150,11 @@ const createEmployee = async (req) => {
     data,
   };
 };
-//incomplete code
-const promoteEmployees = async (req) => {
-  const requests = req.body;
-  const results = await EmployeePromotion.insertMany(requests);
-  return { results };
-};
 const editEmployee = async (req) => {
   const { _id } = req?.query || {};
   const {
     name,
     department,
-    designation,
     phone,
     manager,
     salary,
@@ -172,28 +165,37 @@ const editEmployee = async (req) => {
     rating,
     employeeSatisfaction,
     onNoticePeriod,
-    level,
   } = req?.body || {};
-  const employee = await Employee.findByIdAndUpdate(
-    { _id: _id },
-    {
-      name,
-      department,
-      designation,
-      phone,
-      manager,
-      salary,
-      location,
-      workMode,
-      projects,
-      skills,
-      rating,
-      employeeSatisfaction,
-      onNoticePeriod,
-      level,
-    },
-    { returnDocument: 'after' }
-  );
+  // designation and level are intentionally ignored here: use the promotion endpoint.
+  // User duplicates name/department, so both are written together.
+  const employee = await runInTransaction(async (session) => {
+    const updated = await Employee.findByIdAndUpdate(
+      { _id: _id },
+      {
+        name,
+        department,
+        phone,
+        manager,
+        salary,
+        location,
+        workMode,
+        projects,
+        skills,
+        rating,
+        employeeSatisfaction,
+        onNoticePeriod,
+      },
+      { returnDocument: 'after', session }
+    );
+    if (updated) {
+      await User.updateOne(
+        { email: updated.email },
+        { $set: { name: updated.name, department: updated.department } },
+        { session }
+      );
+    }
+    return updated;
+  });
   eventEmitter.emit(EMPLOYEE_EDITED, {
     adminId: req.user._id,
     employeeId: _id,
@@ -205,8 +207,13 @@ const editEmployee = async (req) => {
 };
 const deleteEmployee = async (req) => {
   const { _id } = req.query;
-  const employee = await Employee.findByIdAndDelete(_id).lean();
-  await User.findOneAndDelete({ email: employee?.email });
+  const employee = await runInTransaction(async (session) => {
+    const deleted = await Employee.findByIdAndDelete(_id, { session }).lean();
+    if (deleted) {
+      await User.findOneAndDelete({ email: deleted.email }, { session });
+    }
+    return deleted;
+  });
   eventEmitter.emit(EMPLOYEE_DELETED, {
     adminId: req.user._id,
     employeeId: _id,
@@ -224,5 +231,4 @@ module.exports = {
   editEmployee,
   editEmployeeProfile,
   deleteEmployee,
-  promoteEmployees,
 };

@@ -13,3 +13,5 @@ log/
 .cache_ggshield
 
 uploads
+# data migration backups (contain personal data)
+backups/
