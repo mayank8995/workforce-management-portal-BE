@@ -3,6 +3,7 @@ const connectDB = require('./src/config/database');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('./src/events/activityLog.listener');
+require('./src/events/realtime.listener');
 
 const authRouter = require('./src/routes/auth');
 const employeeRouter = require('./src/routes/employee');
@@ -20,6 +21,7 @@ const {
   authLimiter,
 } = require('./src/utils/rateLimiter');
 const uploadRouter = require('./src/routes/upload');
+const { initSocket } = require('./src/socket');
 
 const app = express();
 
@@ -50,9 +52,10 @@ connectDB()
     logger.info('Database connected successfully...');
     await loadRoles();
     logger.info('Roles cached');
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       logger.info(`server is running on port ${PORT}`);
     });
+    initSocket(server);
   })
   .catch((err) => {
     logger.error('Database Connection failed!', err);
