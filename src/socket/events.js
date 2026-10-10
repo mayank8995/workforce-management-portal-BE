@@ -8,6 +8,8 @@ const SOCKET_EVENTS = {
   PRESENCE_ONLINE: 'presence:online',
   PRESENCE_OFFLINE: 'presence:offline',
   SESSION_EXPIRED: 'session:expired',
+  // sent only to the promoted user, carrying their new permissions
+  USER_PROMOTED: 'user:promoted',
   // client -> server (with ack)
   PRESENCE_REQUEST: 'presence:request',
 };

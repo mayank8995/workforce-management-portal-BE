@@ -5,7 +5,7 @@ const User = require('../model/user');
 const Employee = require('../model/employee');
 const corsOptions = require('../config/cors');
 const logger = require('../logger/logger');
-const { getRoles } = require('../utils/roleCache');
+const { getPermissionsFor } = require('../utils/roleCache');
 const presence = require('./presence');
 const { SOCKET_EVENTS, ROOMS } = require('./events');
 require('dotenv').config();
@@ -19,25 +19,22 @@ const socketError = (message, code) => {
   return err;
 };
 
+const toPermissionRooms = (permissions) =>
+  permissions.flatMap((permission) =>
+    permission.actions.map((action) =>
+      ROOMS.permission(permission.resource, action)
+    )
+  );
+
 // Same role/level resolution as the authorizePermissions middleware.
 const resolvePermissionRooms = async (user) => {
   if (user?.role === 'admin') {
     return [ROOMS.ADMINS];
   }
-  const roleType = user?.role === 'guest' ? 'guest' : 'employee';
-  const [employee, roles] = await Promise.all([
-    Employee.findOne({ email: user.email }).select('level').lean(),
-    getRoles(),
-  ]);
-  const role = roles?.find((r) => r?.name === roleType);
-  const permissions =
-    role?.levelPermissions?.find((lp) => lp.level === employee?.level)
-      ?.permissions || [];
-  return permissions.flatMap((permission) =>
-    permission.actions.map((action) =>
-      ROOMS.permission(permission.resource, action)
-    )
-  );
+  const employee = await Employee.findOne({ email: user.email })
+    .select('level')
+    .lean();
+  return toPermissionRooms(await getPermissionsFor(user.role, employee?.level));
 };
 
 const authenticate = async (socket, next) => {
@@ -132,4 +129,18 @@ const emitToRoom = (room, event, payload) => {
   io?.to(room).emit(event, payload);
 };
 
-module.exports = { initSocket, emitToRoom };
+// Moves a user's open sockets to the permission rooms of their new level.
+const refreshUserPermissionRooms = async (userId, permissions) => {
+  if (!io) return;
+  const sockets = await io.in(ROOMS.user(String(userId))).fetchSockets();
+  const rooms = toPermissionRooms(permissions);
+  for (const socket of sockets) {
+    socket.rooms.forEach((room) => {
+      if (room.startsWith('perm:')) socket.leave(room);
+    });
+    socket.join(rooms);
+    socket.data.rooms = rooms;
+  }
+};
+
+module.exports = { initSocket, emitToRoom, refreshUserPermissionRooms };

@@ -79,7 +79,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       enum: {
-        values: ['admin', 'employee'],
+        values: ['admin', 'employee', 'guest'],
         message: `{VALUE} is invalid role type`,
       },
     },

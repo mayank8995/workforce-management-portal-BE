@@ -52,11 +52,23 @@ employeeRouter.delete(
   authorizePermissions('employee', 'delete'),
   employeesController.deleteEmployee
 );
-employeeRouter.delete(
+employeeRouter.post(
   '/employees/promote',
   verifyJWT,
   authorizePermissions('employee', 'update'),
   employeesController.promoteEmployees
+);
+employeeRouter.patch(
+  '/employees/:id/promote',
+  verifyJWT,
+  authorizePermissions('employee', 'update'),
+  employeesController.promoteEmployee
+);
+employeeRouter.get(
+  '/employees/:id/promotions',
+  verifyJWT,
+  authorizePermissions('employee', 'read'),
+  employeesController.getPromotionHistory
 );
 
 module.exports = employeeRouter;
