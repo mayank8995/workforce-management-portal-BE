@@ -27,6 +27,7 @@
     "json-server": "^0.17.4",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.3",
+    "socket.io": "^4.8.4",
     "validator": "^13.15.35",
     "winston": "^3.19.0"
   },

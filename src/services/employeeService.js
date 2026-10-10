@@ -143,7 +143,8 @@ const createEmployee = async (req) => {
   const data = await employee.save();
   eventEmitter.emit(EMPLOYEE_CREATED, {
     adminId: req.user._id,
-    employeeId: _id,
+    employeeId: data._id,
+    employeeName: data.name,
   });
   return {
     data,
@@ -196,6 +197,7 @@ const editEmployee = async (req) => {
   eventEmitter.emit(EMPLOYEE_EDITED, {
     adminId: req.user._id,
     employeeId: _id,
+    employeeName: employee?.name,
   });
   return {
     employee,
@@ -208,6 +210,7 @@ const deleteEmployee = async (req) => {
   eventEmitter.emit(EMPLOYEE_DELETED, {
     adminId: req.user._id,
     employeeId: _id,
+    employeeName: employee?.name,
   });
   return {
     employee,
