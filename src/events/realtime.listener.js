@@ -1,7 +1,8 @@
 const eventEmitter = require('./eventemitters');
 const User = require('../model/user');
 const logger = require('../logger/logger');
-const { emitToRoom } = require('../socket');
+const { emitToRoom, refreshUserPermissionRooms } = require('../socket');
+const { getPermissionsFor } = require('../utils/roleCache');
 const {
   SOCKET_EVENTS,
   ROOMS,
@@ -11,6 +12,7 @@ const {
   EMPLOYEE_CREATED,
   EMPLOYEE_EDITED,
   EMPLOYEE_DELETED,
+  EMPLOYEE_PROMOTED,
 } = require('../utils/constants');
 
 // Admins skip permission rooms, so every audience includes them explicitly.
@@ -69,3 +71,42 @@ eventEmitter.on(
   EMPLOYEE_DELETED,
   broadcastEmployeeChange('deleted', 'EMPLOYEE_DELETED')
 );
+
+const notifyPromotedUser = async ({
+  employeeEmail,
+  currentDesignation,
+  currentLevel,
+}) => {
+  try {
+    const user = await User.findOne({ email: employeeEmail })
+      .select('_id role')
+      .lean();
+    if (!user) return;
+    const permissions =
+      user.role === 'admin'
+        ? []
+        : await getPermissionsFor(user.role, currentLevel);
+    if (user.role !== 'admin') {
+      await refreshUserPermissionRooms(user._id, permissions);
+    }
+    emitToRoom(ROOMS.user(String(user._id)), SOCKET_EVENTS.USER_PROMOTED, {
+      designation: currentDesignation,
+      level: currentLevel,
+      permissions,
+      at: new Date().toISOString(),
+    });
+  } catch (err) {
+    logger.error('socket.promotion', {
+      employeeEmail,
+      error: { message: err?.message, stack: err?.stack },
+    });
+  }
+};
+
+const broadcastPromotion = broadcastEmployeeChange(
+  'promoted',
+  'EMPLOYEE_PROMOTED'
+);
+eventEmitter.on(EMPLOYEE_PROMOTED, async (payload) => {
+  await Promise.all([broadcastPromotion(payload), notifyPromotedUser(payload)]);
+});

@@ -1,13 +1,16 @@
 const Employee = require('../model/employee');
 const logger = require('../logger/logger');
 const AppError = require('../utils/AppError');
+const { asyncHandler } = require('../utils/asyncHandler');
 
+// asyncHandler forwards rejections to the error middleware; Express 4 would
+// otherwise leave them unhandled, which terminates the Node process.
 const authorizePermissions = (resource, action) => {
-  return async (req, res, next) => {
+  return asyncHandler(async (req, res, next) => {
     const user = req?.user;
     const employee = await Employee.findOne({ email: user.email });
     if (!employee) {
-      throw new AppError(`Employee not found::${user}`, 404);
+      throw new AppError('Employee record not found', 404, 'EMPLOYEE_NOT_FOUND');
     }
     let roleType = '';
     if (user?.role === 'admin') {
@@ -40,6 +43,6 @@ const authorizePermissions = (resource, action) => {
     }
     req.permissions = permissions;
     next();
-  };
+  });
 };
 module.exports = { authorizePermissions };
