@@ -24,10 +24,11 @@ const clientSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // Stored as names until a Client/Project module links them to real records.
     accountManager: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Employee',
+      type: String,
       required: true,
+      trim: true,
     },
 
     status: {
@@ -77,8 +78,8 @@ const clientSchema = new mongoose.Schema(
 
     projects: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Project',
+        type: String,
+        trim: true,
       },
     ],
   },

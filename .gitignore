@@ -11,3 +11,7 @@ log/
 .ggshield/
 .ggshield_cache/
 .cache_ggshield
+
+uploads
+# data migration backups (contain personal data)
+backups/

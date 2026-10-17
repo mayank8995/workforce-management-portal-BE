@@ -15,7 +15,7 @@ const fetchFilters = (req) => {
   };
 };
 
-const guest = async (req, res) => {
+const guest = async (_req, res) => {
   // extract
   // check if user is already registered.
   const user = await User.findOne({ email: process.env.GUEST_EMAIL });
@@ -56,7 +56,7 @@ const guest = async (req, res) => {
     _id: employee?._id,
     name: user.name,
     department: user.department,
-    designation: user.designation,
+    designation: employee?.designation ?? user.designation,
     email: user.email,
     empId: user.empId,
     permissions: permissions,
@@ -104,7 +104,7 @@ const login = async (req, res) => {
     _id: employee?._id,
     name: user.name,
     department: user.department,
-    designation: user.designation,
+    designation: employee?.designation ?? user.designation,
     email: user.email,
     empId: user.empId,
     permissions: permissions,

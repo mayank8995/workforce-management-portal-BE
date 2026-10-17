@@ -197,6 +197,11 @@ const buildSearch = (search, prefix = '') => {
   };
 };
 
+const PROMOTION_WINDOW_START = new Date('2024-01-01T00:00:00.000Z');
+
+// The guest login is backed by an Employee record; keep it out of listings and analytics.
+const NON_GUEST_EMPLOYEES = { level: { $ne: 'guest' } };
+
 const METRIC_CONFIG = {
   topPerformers: {
     source: 'employee',
@@ -230,11 +235,14 @@ const METRIC_CONFIG = {
 
   promotedThisYear: {
     source: 'promotion',
-    match: {
-      promotedOn: {
-        $gte: new Date('2024-01-01T00:00:00.000Z'),
-        $lt: new Date('2026-09-01T00:00:00.000Z'),
-      },
+    // Getter so the upper bound is "now" at query time, not at server start.
+    get match() {
+      return {
+        promotedOn: {
+          $gte: PROMOTION_WINDOW_START,
+          $lte: new Date(),
+        },
+      };
     },
   },
 };
@@ -319,6 +327,7 @@ const filterableFieldsPromoted = ['department', 'designation'];
 const filterableFieldsReview = ['department', 'designation'];
 
 module.exports = {
+  NON_GUEST_EMPLOYEES,
   ALLOWED_SORT_FIELDS,
   EMPLOYEE_PROJECTION,
   buildSearch,

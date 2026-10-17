@@ -1,7 +1,5 @@
-const EmployeeAnalytics = require('../model/employeeAnalytics');
 const {
   EMPLOYEE_SAFE_DATA,
-  REVIEW_REASON,
   skillsInDemand,
   revenueTrend,
   attritionInsights,
@@ -9,6 +7,7 @@ const {
 const EmployeePromotion = require('../model/employeePromotion');
 const {
   METRIC_CONFIG,
+  NON_GUEST_EMPLOYEES,
   ALLOWED_SORT_FIELDS,
   EMPLOYEE_PROJECTION,
   buildEmployeeFilters,
@@ -24,64 +23,29 @@ const Client = require('../model/client');
 const { extract } = require('./utilService');
 const AppError = require('../utils/AppError');
 
-const fetchTopPerformers = async () => {
-  const employees = await EmployeeAnalytics.findOne(
-    {},
-    { topPerformers: 1, _id: 0 }
-  )
-    .populate('topPerformers.employees', EMPLOYEE_SAFE_DATA)
+// Filter options are built from live data: the EmployeeAnalytics snapshot is never
+// refreshed and drifts as soon as employees change.
+const fetchMetricEmployees = (metric) =>
+  Employee.find({ ...NON_GUEST_EMPLOYEES, ...METRIC_CONFIG[metric].match })
+    .select(EMPLOYEE_SAFE_DATA.join(' '))
     .lean();
-  return { employees };
-};
-
-const fetchEmployeesRequiringReview = async () => {
-  const data = await EmployeeAnalytics.findOne(
-    {},
-    { requiringReview: 1, _id: 0 }
-  )
-    .populate('requiringReview.employees', EMPLOYEE_SAFE_DATA)
-    .lean();
-  const employees = data.requiringReview.employees.map((employee) => ({
-    ...employee,
-    reviewReason: [
-      employee.rating < 4 && REVIEW_REASON[0],
-      employee.attendancePercentage < 88 && REVIEW_REASON[1],
-      employee.onNoticePeriod && REVIEW_REASON[2],
-    ].filter(Boolean),
-  }));
-  return { employees };
-};
 
 const fetchEmployeesPromoted = async () => {
-  const employees = await EmployeeAnalytics.findOne(
-    {},
-    { promotedThisYear: 1, _id: 0 }
+  const records = await EmployeePromotion.find(
+    METRIC_CONFIG.promotedThisYear.match
   )
     .populate({
-      path: 'promotedThisYear.employees',
-      populate: {
-        path: 'employeeId',
-        select: EMPLOYEE_SAFE_DATA.join(' '),
-      },
+      path: 'employeeId',
+      select: EMPLOYEE_SAFE_DATA.join(' '),
+      match: NON_GUEST_EMPLOYEES,
     })
     .lean();
-  const promotions = employees.promotedThisYear.employees.map(
-    ({ employeeId, _id, __v, createdAt, updatedAt, ...promotion }) => ({
+  return records
+    .filter(({ employeeId }) => employeeId)
+    .map(({ employeeId, _id, __v, createdAt, updatedAt, ...promotion }) => ({
       ...employeeId,
       ...promotion,
-    })
-  );
-  return { employees: promotions };
-};
-
-const fetchEmployeesMeetingKPIs = async () => {
-  const employees = await EmployeeAnalytics.findOne(
-    {},
-    { meetingKPIs: 1, _id: 0 }
-  )
-    .populate('meetingKPIs.employees', EMPLOYEE_SAFE_DATA)
-    .lean();
-  return { employees };
+    }));
 };
 
 const fetchFilters = async (req, res) => {
@@ -90,24 +54,21 @@ const fetchFilters = async (req, res) => {
     let data;
     let filterKeys = [];
     if (type === 'topPerformers') {
-      const { employees } = await fetchTopPerformers();
-      data = employees?.topPerformers?.employees;
+      data = await fetchMetricEmployees('topPerformers');
       filterKeys = filterableFieldsTopPerformers;
     } else if (type === 'promotedThisYear') {
-      const { employees } = await fetchEmployeesPromoted();
-      data = employees;
+      data = await fetchEmployeesPromoted();
       filterKeys = filterableFieldsPromoted;
     } else if (type === 'meetingKPIs') {
-      const { employees } = await fetchEmployeesMeetingKPIs();
-      data = employees?.meetingKPIs?.employees;
+      data = await fetchMetricEmployees('meetingKPIs');
       filterKeys = filterableFields;
     } else if (type === 'requiringReview') {
-      const { employees } = await fetchEmployeesRequiringReview();
-      data = employees;
+      data = await fetchMetricEmployees('requiringReview');
       filterKeys = filterableFieldsReview;
     } else if (type === 'employees') {
-      const employees = await Employee.find({});
-      data = employees;
+      data = await Employee.find(NON_GUEST_EMPLOYEES)
+        .select(EMPLOYEE_SAFE_DATA.join(' '))
+        .lean();
       filterKeys = filterableFields;
     } else {
       throw new AppError('Analytics type not present', 404);
@@ -161,7 +122,8 @@ const getEmployeeMetric = async (metric, query) => {
 
   // const metricPath = `$${metric}`;
   let metaData = [];
-  const pipeline = [];
+  // First stage so the metaData totals exclude the guest record too.
+  const pipeline = [{ $match: NON_GUEST_EMPLOYEES }];
 
   let matchArray = [
     {
@@ -490,7 +452,7 @@ const getPromotedEmployees = async (query) => {
                     $gte: ['$promotedOn', new Date('2024-01-01T00:00:00.000Z')],
                   },
                   {
-                    $lt: ['$promotedOn', new Date('2026-09-01T00:00:00.000Z')],
+                    $lte: ['$promotedOn', new Date()],
                   },
                 ],
               },
@@ -525,6 +487,10 @@ const getPromotedEmployees = async (query) => {
     {
       $match: promotionMatch,
     },
+    // One row per employee: their most recent promotion in the window.
+    { $sort: { promotedOn: -1 } },
+    { $group: { _id: '$employeeId', latest: { $first: '$$ROOT' } } },
+    { $replaceRoot: { newRoot: '$latest' } },
     {
       $lookup: {
         from: 'employees',
@@ -535,6 +501,9 @@ const getPromotedEmployees = async (query) => {
     },
     {
       $unwind: '$employee',
+    },
+    {
+      $match: { 'employee.level': NON_GUEST_EMPLOYEES.level },
     },
     {
       $match: employeeFilters,
@@ -692,6 +661,7 @@ const getAnalytics = async () => {
   const totalRevenue = result?.[0]?.totalAmount?.[0]?.count || 0;
   const topClients = result?.[0]?.topClients;
   const data = await Employee.aggregate([
+    { $match: NON_GUEST_EMPLOYEES },
     {
       $facet: {
         activeProjects: [

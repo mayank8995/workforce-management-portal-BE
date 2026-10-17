@@ -1,4 +1,5 @@
 const service = require('../services/employeeService');
+const promotionService = require('../services/promotionService');
 const { asyncHandler } = require('../utils/asyncHandler');
 
 const getEmployees = asyncHandler(async (req, res) => {
@@ -61,12 +62,33 @@ const deleteEmployee = asyncHandler(async (req, res) => {
   });
 });
 
-const promoteEmployees = asyncHandler(async (req, res) => {
-  const result = await service.promoteEmployees(req);
+const promoteEmployee = asyncHandler(async (req, res) => {
+  const result = await promotionService.promoteEmployee(
+    { ...req.body, employeeId: req.params.id },
+    req.user
+  );
   return res.status(200).json({
     success: true,
     data: result,
-    message: 'Employees promoted successfully!!',
+    message: 'Employee promoted successfully!!',
+  });
+});
+
+const promoteEmployees = asyncHandler(async (req, res) => {
+  const result = await promotionService.promoteEmployees(req.body, req.user);
+  return res.status(200).json({
+    success: result.failed === 0,
+    data: result,
+    message: `${result.promoted} promoted, ${result.failed} failed`,
+  });
+});
+
+const getPromotionHistory = asyncHandler(async (req, res) => {
+  const result = await promotionService.getPromotionHistory(req.params.id);
+  return res.status(200).json({
+    success: true,
+    data: result,
+    message: 'Fetched successfully !!',
   });
 });
 
@@ -78,5 +100,7 @@ module.exports = {
   editEmployee,
   editEmployeeProfile,
   deleteEmployee,
+  promoteEmployee,
   promoteEmployees,
+  getPromotionHistory,
 };

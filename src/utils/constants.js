@@ -21,6 +21,16 @@ const DEPARTMENTS = [
 ];
 const WORKMODE = ['Remote', 'Hybrid', 'Onsite'];
 const EMPLOYEE_SATISFACTION = ['Low', 'Medium', 'High'];
+// 'guest' backs the demo guest login; it is never a promotion target.
+const EMPLOYEE_LEVELS = [
+  'junior',
+  'senior',
+  'lead',
+  'admin',
+  'executive',
+  'guest',
+];
+const PROMOTABLE_LEVELS = EMPLOYEE_LEVELS.filter((level) => level !== 'guest');
 const EMPLOYEE_SAFE_DATA = [
   'name',
   'email',
@@ -41,10 +51,10 @@ const EMPLOYEE_SAFE_DATA = [
   'onNoticePeriod',
   'level',
 ];
+// designation and level are excluded: they only change through the promotion workflow.
 const ALLOWED_EDITABLE_FIELDS = [
   'name',
   'department',
-  'designation',
   'phone',
   'manager',
   'salary',
@@ -55,7 +65,6 @@ const ALLOWED_EDITABLE_FIELDS = [
   'rating',
   'employeeSatisfaction',
   'onNoticePeriod',
-  'level',
 ];
 const ALLOWED_EDITS_USER_PROFILE = ['name', 'phone', 'skills', 'image'];
 const REVIEW_REASON = ['Low Rating', 'Low Attendance', 'On Notice'];
@@ -193,6 +202,7 @@ const attritionInsights = {
 const EMPLOYEE_CREATED = 'employeeCreated';
 const EMPLOYEE_EDITED = 'employeeEdited';
 const EMPLOYEE_DELETED = 'employeeDeleted';
+const EMPLOYEE_PROMOTED = 'employeePromoted';
 const ADMIN_LOGIN = 'adminLogin';
 const ADMIN_LOGOUT = 'adminLogour';
 
@@ -202,6 +212,8 @@ module.exports = {
   DEPARTMENTS,
   WORKMODE,
   EMPLOYEE_SATISFACTION,
+  EMPLOYEE_LEVELS,
+  PROMOTABLE_LEVELS,
   EMPLOYEE_SAFE_DATA,
   REVIEW_REASON,
   commonFields,
@@ -213,6 +225,7 @@ module.exports = {
   EMPLOYEE_CREATED,
   EMPLOYEE_EDITED,
   EMPLOYEE_DELETED,
+  EMPLOYEE_PROMOTED,
   ADMIN_LOGIN,
   ADMIN_LOGOUT,
 };

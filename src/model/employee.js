@@ -6,6 +6,7 @@ const {
   RISK_STATUS,
   WORKMODE,
   EMPLOYEE_SATISFACTION,
+  EMPLOYEE_LEVELS,
 } = require('../utils/constants');
 const AppError = require('../utils/AppError');
 const projectSchema = new mongoose.Schema({
@@ -233,7 +234,7 @@ const employeeSchema = new mongoose.Schema(
     level: {
       type: String,
       required: true,
-      enum: ['junior', 'senior', 'lead', 'admin', 'executive'],
+      enum: EMPLOYEE_LEVELS,
     },
   },
   {

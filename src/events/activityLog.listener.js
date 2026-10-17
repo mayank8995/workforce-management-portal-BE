@@ -5,6 +5,7 @@ const {
   EMPLOYEE_CREATED,
   EMPLOYEE_EDITED,
   EMPLOYEE_DELETED,
+  EMPLOYEE_PROMOTED,
   ADMIN_LOGIN,
   ADMIN_LOGOUT,
 } = require('../utils/constants');
@@ -99,6 +100,39 @@ eventEmitter.on(EMPLOYEE_DELETED, async ({ adminId, employeeId }) => {
     logger.info('EMPLOYEE_DELETED', {
       adminId,
       action: 'EMPLOYEE_DELETED',
+      entityType: 'Employee',
+      entityId: employeeId,
+      status: 'FAILED',
+      timestamp: new Date(),
+      error: {
+        message: err?.message,
+        stack: err?.stack,
+      },
+    });
+  }
+});
+eventEmitter.on(EMPLOYEE_PROMOTED, async ({ adminId, employeeId }) => {
+  try {
+    await ActivityLog.create({
+      adminId,
+      action: 'EMPLOYEE_PROMOTED',
+      entityType: 'Employee',
+      entityId: employeeId,
+      status: 'SUCCESS',
+      timestamp: new Date(),
+    });
+    logger.info('EMPLOYEE_PROMOTED', {
+      adminId,
+      action: 'EMPLOYEE_PROMOTED',
+      entityType: 'Employee',
+      entityId: employeeId,
+      status: 'SUCCESS',
+      timestamp: new Date(),
+    });
+  } catch (err) {
+    logger.error('EMPLOYEE_PROMOTED', {
+      adminId,
+      action: 'EMPLOYEE_PROMOTED',
       entityType: 'Employee',
       entityId: employeeId,
       status: 'FAILED',
